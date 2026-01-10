@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photobooth Ultimate V5.1 (Flash)</title>
+    <title>Photobooth University Expo</title>
     <style>
         :root { --primary: #6c5ce7; --bg: #1e272e; --panel: #2f3640; }
         
@@ -37,23 +37,17 @@
 
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-        /* --- FITUR BARU: FLASH OVERLAY --- */
+        /* Flash Effect */
         #flash-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: white;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 20;
-            transition: opacity 0.2s ease-out; /* Efek fade out halus */
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: white; opacity: 0; pointer-events: none; z-index: 20;
+            transition: opacity 0.2s ease-out;
         }
 
         #countdown {
-            position: absolute; inset: 0;
-            display: none; justify-content: center; align-items: center;
-            font-size: 100px; font-weight: 900;
-            background: rgba(0,0,0,0.4); text-shadow: 0 0 20px rgba(0,0,0,0.8);
-            z-index: 10;
+            position: absolute; inset: 0; display: none; justify-content: center; align-items: center;
+            font-size: 100px; font-weight: 900; background: rgba(0,0,0,0.4);
+            text-shadow: 0 0 20px rgba(0,0,0,0.8); z-index: 10;
         }
 
         #result-preview {
@@ -67,25 +61,29 @@
         }
 
         .section-title { font-size: 0.9rem; font-weight: bold; color: #dfe6e9; margin: 15px 0 8px; border-bottom: 1px solid #555; padding-bottom: 5px; }
-        .section-title:first-child { margin-top: 0; }
 
         select, button, input[type="file"] {
             width: 100%; padding: 10px; margin-bottom: 10px;
             border-radius: 8px; border: none; font-family: inherit;
         }
 
+        /* Frame Grid Update */
         .frame-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
         .frame-item {
             aspect-ratio: 1/2; background: #444; border: 3px solid transparent;
             border-radius: 6px; cursor: pointer; position: relative; overflow: hidden;
+            background-size: cover; background-position: center;
         }
         .frame-item.active { border-color: var(--primary); box-shadow: 0 0 10px var(--primary); }
-        .frame-color { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; text-align: center; padding: 2px; }
+        .frame-label {
+            position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7);
+            font-size: 9px; text-align: center; padding: 2px 0;
+        }
 
         .btn-primary { background: var(--primary); color: white; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
         .btn-primary:hover { background: #5649c0; }
-        .btn-secondary { background: #00b894; color: white; cursor: pointer; display: none; }
-        .btn-danger { background: #d63031; color: white; cursor: pointer; display: none; }
+        .btn-secondary { background: #00b894; color: white; display: none; cursor: pointer; }
+        .btn-danger { background: #d63031; color: white; display: none; cursor: pointer; }
 
         canvas { display: none; }
     </style>
@@ -93,7 +91,7 @@
 <body>
 
     <h1>Photobooth University Expo</h1>
-    <p class="subtitle">Koneksikan kamera, pilih frame, dan beraksi!</p>
+    <p class="subtitle">Sekarang dengan Frame PNG!</p>
 
     <div class="main-container">
         
@@ -108,20 +106,20 @@
 
         <div class="right-panel">
             
-            <div class="section-title">📡 1. Sumber Kamera</div>
+            <div class="section-title">Sumber Kamera</div>
             <select id="camera-source" onchange="changeCamera()">
                 <option value="">Mencari kamera...</option>
             </select>
 
-            <div class="section-title">🖼️ 2. Pilih Frame</div>
+            <div class="section-title">Pilih Frame</div>
             
-            <div style="font-size: 12px; margin-bottom:5px; color:#aaa;">Pilih Preset Developer:</div>
+            <div style="font-size: 12px; margin-bottom:5px; color:#aaa;">Pilih Preset:</div>
             <div class="frame-grid" id="frame-list"></div>
 
-            <div style="font-size: 12px; margin-bottom:5px; color:#aaa; margin-top: 10px;">Atau Upload Sendiri (PNG):</div>
+            <div style="font-size: 12px; margin-bottom:5px; color:#aaa; margin-top: 10px;">Atau Upload Manual:</div>
             <input type="file" id="custom-upload" accept="image/png" style="background: #444; color: white; font-size: 12px;">
 
-            <div class="section-title">⏱️ 3. Eksekusi</div>
+            <div class="section-title">Jeda</div>
             <select id="timer-select">
                 <option value="3">Timer: 3 Detik</option>
                 <option value="5" selected>Timer: 5 Detik</option>
@@ -138,7 +136,7 @@
     <canvas id="canvas"></canvas>
 
     <script>
-        // === CONFIGURATION ===
+        // === KONFIGURASI ===
         const STRIP_W = 460;
         const STRIP_H = 1200;
         const PHOTO_W = 400;
@@ -154,29 +152,34 @@
         const countdownEl = document.getElementById('countdown');
         const frameList = document.getElementById('frame-list');
         const statusText = document.getElementById('status-text');
-        const flashOverlay = document.getElementById('flash-overlay'); // Element Flash Baru
+        const flashOverlay = document.getElementById('flash-overlay');
 
         // === STATE ===
         let currentStream = null;
         let photos = [];
-        let uploadedFrameImg = null;
-        let selectedPresetIndex = 0;
+        let currentFrameImg = null; // Menyimpan Image Object yang sedang aktif (baik dari preset maupun upload)
 
+        // === DATA FRAME (GANTI URL DI SINI) ===
+        // Pastikan file gambar ada di folder yang sama, atau gunakan URL lengkap.
         const presetFrames = [
-            { name: "Minimalis Putih", color: "#ffffff", border: "#dddddd", text: "#333" },
-            { name: "Hitam Elegan", color: "#111111", border: "#333333", text: "#fff" },
-            { name: "Pink Pastel", color: "#ffcccc", border: "#ff7979", text: "#d63031" },
-            { name: "Biru Langit", color: "#dff9fb", border: "#7ed6df", text: "#22a6b3" },
-            { name: "Vintage Kuning", color: "#f6e58d", border: "#f0932b", text: "#e17055" },
-            { name: "Ungu Gelap", color: "#4834d4", border: "#686de0", text: "#fff" }
+            { name: "Frame 1", src: "assets/frame1.png" }, // Ganti dengan nama file kamu
+            { name: "Frame 2", src: "assets/frame2.png" },
+            { name: "Frame 3", src: "assets/frame3.png" },
+            { name: "Frame 4", src: "assets/frame4.png" },
+            { name: "Frame 5", src: "assets/frame5.png" }
         ];
 
         // === INITIALIZATION ===
         async function init() {
+            // Load Frame Pertama sebagai default
+            if(presetFrames.length > 0) {
+                loadFrame(presetFrames[0].src, 0);
+            }
             renderPresets();
             await getCameras();
         }
 
+        // === LOGIKA KAMERA ===
         async function getCameras() {
             try {
                 await navigator.mediaDevices.getUserMedia({ video: true });
@@ -208,47 +211,58 @@
                 statusText.innerText = "Gagal akses kamera";
             }
         }
-
         function changeCamera() { startCamera(cameraSelect.value); }
 
-        // === FRAME LOGIC ===
+        // === LOGIKA FRAME (GAMBAR) ===
         function renderPresets() {
             frameList.innerHTML = '';
             presetFrames.forEach((frame, idx) => {
                 const div = document.createElement('div');
-                div.className = `frame-item ${idx === selectedPresetIndex ? 'active' : ''}`;
-                div.innerHTML = `<div class="frame-color" style="background:${frame.color}; color:${frame.text}">${frame.name}</div>`;
-                div.onclick = () => selectPreset(idx);
+                div.className = `frame-item`;
+                div.id = `preset-${idx}`;
+                // Tampilkan thumbnail frame di kotak pilihan
+                div.style.backgroundImage = `url('${frame.src}')`; 
+                div.innerHTML = `<div class="frame-label">${frame.name}</div>`;
+                div.onclick = () => loadFrame(frame.src, idx);
                 frameList.appendChild(div);
             });
         }
 
-        function selectPreset(index) {
-            selectedPresetIndex = index;
-            uploadedFrameImg = null;
-            document.getElementById('custom-upload').value = "";
-            renderPresets();
-            statusText.innerText = `Terpilih: ${presetFrames[index].name}`;
+        function loadFrame(src, index) {
+            // Update UI Aktif
+            document.querySelectorAll('.frame-item').forEach(el => el.classList.remove('active'));
+            if(index !== null) {
+                const el = document.getElementById(`preset-${index}`);
+                if(el) el.classList.add('active');
+            }
+
+            // Load Gambar ke Memory
+            const img = new Image();
+            img.onload = () => {
+                currentFrameImg = img; // Simpan di variabel global
+                statusText.innerText = "Frame Siap: " + (index !== null ? presetFrames[index].name : "Custom Upload");
+                // Reset upload input jika memilih preset
+                if(index !== null) document.getElementById('custom-upload').value = "";
+            };
+            img.onerror = () => {
+                statusText.innerText = "Gagal memuat gambar frame. Cek nama file!";
+            };
+            img.src = src;
         }
 
+        // Handle Custom Upload (Sama seperti preset, tapi sumbernya dari file user)
         document.getElementById('custom-upload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if(file) {
                 const reader = new FileReader();
                 reader.onload = (evt) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        uploadedFrameImg = img;
-                        document.querySelectorAll('.frame-item').forEach(el => el.classList.remove('active'));
-                        statusText.innerText = "Menggunakan Frame Custom Upload";
-                    };
-                    img.src = evt.target.result;
+                    loadFrame(evt.target.result, null); // null index artinya custom
                 };
                 reader.readAsDataURL(file);
             }
         });
 
-        // === PHOTOBOOTH PROCESS ===
+        // === PROSES PHOTOBOOTH ===
         async function startSession() {
             photos = [];
             toggleUI('capturing');
@@ -257,25 +271,18 @@
             for(let i=0; i<PHOTO_COUNT; i++) {
                 statusText.innerText = `Foto ke-${i+1} dari ${PHOTO_COUNT}`;
                 await doCountdown(timer);
-                
-                // === EFEK FLASH (BARU) ===
                 triggerFlash(); 
-                
-                // Ambil gambar
                 photos.push(smartCropCapture());
             }
 
-            statusText.innerText = "Memproses hasil...";
+            statusText.innerText = "Merender hasil...";
             renderResult();
             toggleUI('done');
         }
 
-        // Fungsi Memunculkan Efek Flash
         function triggerFlash() {
-            flashOverlay.style.opacity = 1; // Putih Terang
-            setTimeout(() => {
-                flashOverlay.style.opacity = 0; // Fade out perlahan
-            }, 100); // Tahan putih selama 100ms sebelum fade
+            flashOverlay.style.opacity = 1;
+            setTimeout(() => { flashOverlay.style.opacity = 0; }, 150);
         }
 
         function doCountdown(sec) {
@@ -295,7 +302,7 @@
             });
         }
 
-        // === SMART CROP & RENDER ===
+        // === RENDER HASIL ===
         function smartCropCapture() {
             const temp = document.createElement('canvas');
             temp.width = PHOTO_W; temp.height = PHOTO_H;
@@ -320,13 +327,11 @@
         function renderResult() {
             canvas.width = STRIP_W; canvas.height = STRIP_H;
 
-            if (uploadedFrameImg) {
-                ctx.fillStyle = "white"; ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-            } else {
-                const preset = presetFrames[selectedPresetIndex];
-                ctx.fillStyle = preset.color; ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-            }
+            // 1. Gambar Background Putih (Dasar)
+            ctx.fillStyle = "white"; 
+            ctx.fillRect(0, 0, STRIP_W, STRIP_H);
 
+            // 2. Tempel Foto-foto
             const startX = (STRIP_W - PHOTO_W) / 2;
             const totalPhotoH = PHOTO_COUNT * PHOTO_H;
             const spaceAvailable = STRIP_H - totalPhotoH;
@@ -334,24 +339,22 @@
             let currentY = gap;
 
             photos.forEach(photo => {
-                if (!uploadedFrameImg) {
-                    const preset = presetFrames[selectedPresetIndex];
-                    ctx.fillStyle = preset.border;
-                    ctx.fillRect(startX - 5, currentY - 5, PHOTO_W + 10, PHOTO_H + 10);
-                }
                 ctx.drawImage(photo, startX, currentY);
                 currentY += PHOTO_H + gap;
             });
 
-            if (uploadedFrameImg) {
-                ctx.drawImage(uploadedFrameImg, 0, 0, STRIP_W, STRIP_H);
+            // 3. Tempel Frame PNG (Overlay)
+            if (currentFrameImg) {
+                // Pastikan gambar frame menutupi seluruh strip
+                ctx.drawImage(currentFrameImg, 0, 0, STRIP_W, STRIP_H);
             } else {
-                const preset = presetFrames[selectedPresetIndex];
-                ctx.fillStyle = preset.text;
-                ctx.font = "bold 24px Arial";
-                ctx.textAlign = "center";
-                ctx.fillText("PHOTOBOOTH", STRIP_W/2, STRIP_H - 25);
+                // Fallback jika frame gagal load
+                ctx.strokeStyle = "red"; ctx.lineWidth = 10;
+                ctx.strokeRect(0,0,STRIP_W, STRIP_H);
+                ctx.fillStyle = "black"; ctx.font = "20px Arial";
+                ctx.fillText("Frame Gagal Load", 50, 50);
             }
+
             resultPreview.src = canvas.toDataURL();
             resultPreview.style.display = 'block';
         }
