@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photobooth UE</title>
+    <title>Photobooth UE - Retake Feature</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -159,7 +159,7 @@
             border-radius: 50%; margin-right: 10px; font-size: 0.8rem; flex-shrink: 0;
         }
 
-        /* --- MARQUEE INFINITE ROLL FIX --- */
+        /* --- MARQUEE --- */
         .marquee-wrapper {
             margin-top: 15px; 
             padding-top: 10px; 
@@ -168,24 +168,24 @@
             background: black; 
             color: white; 
             padding: 8px 0;
-            display: flex; /* Flex container */
+            display: flex;
         }
         
         .marquee-content {
-            display: flex; /* Isi sejajar */
+            display: flex;
             white-space: nowrap;
             animation: scroll-left 10s linear infinite;
         }
 
         .marquee-content span {
-            padding-right: 20px; /* Jarak antar teks duplikat */
+            padding-right: 20px;
             font-weight: 800;
             font-size: 1rem;
         }
 
         @keyframes scroll-left {
             0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); } /* Geser setengah total panjang (karena ada 2 text) */
+            100% { transform: translateX(-50%); }
         }
 
         /* --- CONTROLS --- */
@@ -223,15 +223,84 @@
         }
         .btn:active { transform: translate(3px, 3px); box-shadow: 0px 0px 0px 0px black; }
         .btn-primary { background: var(--accent-main); color: black; }
-        .btn-secondary { background: var(--accent-green); color: black; display: none; }
-        .btn-danger { background: var(--accent-red); color: black; display: none; margin-top: 8px; }
+        .btn-secondary { background: var(--accent-green); color: black; }
+        
+        /* --- NEW RETAKE UI --- */
+        .retake-menu {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 15px;
+            width: 100%;
+        }
 
-        /* --- RESULT PREVIEW FIT SCREEN --- */
+        .retake-label {
+            font-weight: 800;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            background: black;
+            color: white;
+            padding: 5px;
+            text-align: center;
+            transform: skew(-2deg);
+            margin-bottom: 5px;
+        }
+
+        .retake-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .btn-retake-num {
+            aspect-ratio: 1/1;
+            background: white;
+            border: var(--border-width) solid black;
+            box-shadow: 4px 4px 0px black;
+            font-weight: 900;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+
+        .btn-retake-num:hover {
+            background: var(--accent-yellow);
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px black;
+        }
+
+        .btn-retake-num:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px black;
+        }
+
+        .btn-retake-all {
+            width: 100%;
+            background: var(--accent-red);
+            color: black;
+            font-weight: 800;
+            border: var(--border-width) solid black;
+            padding: 12px;
+            box-shadow: 4px 4px 0px black;
+            cursor: pointer;
+            border-radius: 8px;
+            text-transform: uppercase;
+        }
+        .btn-retake-all:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px black;
+        }
+
+        /* --- RESULT PREVIEW --- */
         #result-preview {
             width: auto;             
             max-width: 100%;         
             height: auto;            
-            max-height: 550px;       /* Agar tidak perlu scroll panjang */
+            max-height: 550px;       
             margin-top: 0;
             border: var(--border-width) solid black; 
             display: none;
@@ -271,7 +340,7 @@
                 <div class="step-list">
                     <div class="step-item"><span class="step-num">1</span> PILIH FRAME DI KANAN</div>
                     <div class="step-item"><span class="step-num">2</span> ATUR GAYA & TIMER</div>
-                    <div class="step-item"><span class="step-num">3</span> KLIK TOMBOL UNGU</div>
+                    <div class="step-item"><span class="step-num">3</span> KLIK MULAI UNTUK FOTO</div>
                 </div>
                 
                 <div class="marquee-wrapper">
@@ -312,10 +381,26 @@
             </div>
 
             <div style="margin-top: auto;">
-                <button class="btn btn-primary" id="btn-start" onclick="startSession()">MULAI FOTO</button>
-                <button class="btn btn-secondary" id="btn-download" onclick="downloadImage()">DOWNLOAD</button>
-                <button class="btn btn-danger" id="btn-reset" onclick="resetApp()">ULANG</button>
-                <p id="status-text">SIAP JEPRET...</p>
+                <div id="initial-controls">
+                    <button class="btn btn-primary" id="btn-start" onclick="startSession()">MULAI FOTO</button>
+                    <p id="status-text">SIAP JEPRET...</p>
+                </div>
+
+                <div id="retake-controls" class="retake-menu">
+                    <div class="retake-label">ULANG FOTO NOMOR BERAPA?</div>
+                    
+                    <div class="retake-grid">
+                        <button class="btn-retake-num" onclick="retakeSpecificPhoto(0)">1</button>
+                        <button class="btn-retake-num" onclick="retakeSpecificPhoto(1)">2</button>
+                        <button class="btn-retake-num" onclick="retakeSpecificPhoto(2)">3</button>
+                    </div>
+
+                    <button class="btn-retake-all" onclick="resetApp()" style="margin-top: 10px;">ULANG SEMUA</button>
+
+                    <hr style="border: 1px solid black; margin: 15px 0; opacity: 0.3;">
+
+                    <button class="btn btn-secondary" onclick="downloadImage()">DOWNLOAD HASIL</button>
+                </div>
             </div>
         </div>
     </div>
@@ -323,13 +408,14 @@
     <canvas id="canvas"></canvas>
 
     <script>
+        // --- CONSTANTS ---
         const STRIP_W = 460;  
         const STRIP_H = 1200; 
-        
         const PHOTO_W = 400;  
         const PHOTO_H = 300;  
         const PHOTO_COUNT = 3; 
 
+        // --- DOM ELEMENTS ---
         const video = document.getElementById('video');
         const cameraSelect = document.getElementById('camera-source');
         const canvas = document.getElementById('canvas');
@@ -342,21 +428,25 @@
         const infoPanel = document.getElementById('placeholder-info');
         const cameraWrapper = document.getElementById('camera-wrapper');
 
+        // --- STATE VARIABLES ---
         let currentStream = null;
-        let photos = [];
+        let photos = []; // Stores the 3 captured images
         let currentFrameImg = null; 
 
+        // --- PRESETS ---
         const presetFrames = [
-            { name: "F1", src: "assets/frame1.png" },
+            { name: "F1", src: "assets/frame1.png" }, // Pastikan file ini ada
             { name: "F2", src: "assets/frame2.png" },
             { name: "F3", src: "assets/frame3.png" },
             { name: "F4", src: "assets/frame4.png" },
             { name: "F5", src: "assets/frame5.png" }
         ];
 
+        // --- INITIALIZATION ---
         async function init() {
             if(presetFrames.length > 0) {
                 renderPresets();
+                // Select first frame automatically
                 const firstItem = document.getElementById('preset-0');
                 if(firstItem) firstItem.click(); 
             }
@@ -365,6 +455,7 @@
 
         async function getCameras() {
             try {
+                // Minta izin dulu
                 await navigator.mediaDevices.getUserMedia({ video: true });
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const videoDevices = devices.filter(d => d.kind === 'videoinput');
@@ -385,7 +476,11 @@
             if(currentStream) currentStream.getTracks().forEach(t => t.stop());
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { deviceId: deviceId ? { exact: deviceId } : undefined, width: { ideal: 1920 }, height: { ideal: 1080 } }
+                    video: { 
+                        deviceId: deviceId ? { exact: deviceId } : undefined, 
+                        width: { ideal: 1920 }, 
+                        height: { ideal: 1080 } 
+                    }
                 });
                 video.srcObject = stream;
                 currentStream = stream;
@@ -415,10 +510,16 @@
                 if(el) el.classList.add('active');
             }
             const img = new Image();
+            img.crossOrigin = "Anonymous"; // Helps with local dev sometimes
             img.onload = () => {
                 currentFrameImg = img; 
                 statusText.innerText = "FRAME DIPILIH";
                 if(index !== null) document.getElementById('custom-upload').value = "";
+                
+                // Jika sedang di layar hasil (preview), render ulang agar frame berubah real-time
+                if(photos.length === 3 && resultPreview.style.display === 'block') {
+                    renderResult();
+                }
             };
             img.onerror = () => { currentFrameImg = null; };
             img.src = src;
@@ -433,12 +534,14 @@
             }
         });
 
+        // --- MAIN PHOTO LOGIC ---
+        
         async function startSession() {
-            photos = [];
+            photos = []; // Reset photos
             toggleUI('capturing');
-            const timer = parseInt(document.getElementById('timer-select').value);
+            infoPanel.style.display = 'none'; // Hide instructions
             
-            infoPanel.style.display = 'none';
+            const timer = parseInt(document.getElementById('timer-select').value);
 
             for(let i=0; i<PHOTO_COUNT; i++) {
                 statusText.innerText = `POSE ${i+1} / ${PHOTO_COUNT}`;
@@ -446,6 +549,39 @@
                 triggerFlash(); 
                 photos.push(smartCropCapture());
             }
+
+            finishSession();
+        }
+
+        // --- RETAKE LOGIC ---
+        async function retakeSpecificPhoto(index) {
+            // 1. Hide Result, Show Camera
+            resultPreview.style.display = 'none';
+            cameraWrapper.style.display = 'block';
+            document.getElementById('retake-controls').style.display = 'none'; // Hide controls temporarily
+            
+            statusText.innerText = `MENGULANG FOTO KE-${index + 1}`;
+            
+            // 2. Countdown & Capture
+            const timer = parseInt(document.getElementById('timer-select').value);
+            await doCountdown(timer);
+            triggerFlash();
+            
+            // 3. Replace specific photo
+            photos[index] = smartCropCapture();
+            
+            // 4. Re-render
+            statusText.innerText = "MEMPROSES ULANG...";
+            setTimeout(() => {
+                renderResult();
+                cameraWrapper.style.display = 'none';
+                resultPreview.style.display = 'block';
+                document.getElementById('retake-controls').style.display = 'flex'; // Show controls again
+                statusText.innerText = "FOTO DIPERBARUI!";
+            }, 500);
+        }
+
+        function finishSession() {
             statusText.innerText = "MEMPROSES...";
             setTimeout(() => {
                 renderResult();
@@ -453,6 +589,8 @@
                 statusText.innerText = "SELESAI!";
             }, 500);
         }
+
+        // --- UTILS ---
 
         function triggerFlash() {
             flashOverlay.style.opacity = 1;
@@ -477,12 +615,20 @@
         }
 
         function smartCropCapture() {
+            // Crop video to 4:3 Aspect Ratio
             const temp = document.createElement('canvas');
             temp.width = PHOTO_W; temp.height = PHOTO_H;
             const tCtx = temp.getContext('2d');
-            const vidW = video.videoWidth; const vidH = video.videoHeight;
-            const sourceAspect = vidW / vidH; const targetAspect = PHOTO_W / PHOTO_H;
+            
+            const vidW = video.videoWidth; 
+            const vidH = video.videoHeight;
+            
+            const sourceAspect = vidW / vidH; 
+            const targetAspect = PHOTO_W / PHOTO_H;
+            
             let sx, sy, sW, sH;
+            
+            // Calculate center crop
             if (sourceAspect > targetAspect) {
                 sH = vidH; sW = vidH * targetAspect;
                 sy = 0; sx = (vidW - sW) / 2;
@@ -490,18 +636,24 @@
                 sW = vidW; sH = vidW / targetAspect;
                 sx = 0; sy = (vidH - sH) / 2;
             }
-            tCtx.translate(PHOTO_W, 0); tCtx.scale(-1, 1);
+            
+            // Flip horizontal for mirror effect
+            tCtx.translate(PHOTO_W, 0); 
+            tCtx.scale(-1, 1);
+            
             tCtx.drawImage(video, sx, sy, sW, sH, 0, 0, PHOTO_W, PHOTO_H);
-            return temp;
+            return temp; // Returns canvas element
         }
 
         function renderResult() {
             canvas.width = STRIP_W; 
             canvas.height = STRIP_H;
             
+            // Background Color
             ctx.fillStyle = "#f4f3ee"; 
             ctx.fillRect(0, 0, STRIP_W, STRIP_H);
             
+            // Layout Calculations
             const startX = (STRIP_W - PHOTO_W) / 2;
             const totalPhotoH = PHOTO_COUNT * PHOTO_H;
             const spaceAvailable = STRIP_H - totalPhotoH;
@@ -509,46 +661,54 @@
             
             let currentY = gap;
 
+            // Draw Photos
             photos.forEach(photo => {
                 ctx.drawImage(photo, startX, currentY);
-                // Border tipis hitam di foto
+                // Thin Border around photo
                 ctx.lineWidth = 2; 
                 ctx.strokeStyle = "black";
                 ctx.strokeRect(startX, currentY, PHOTO_W, PHOTO_H);
                 currentY += PHOTO_H + gap;
             });
 
+            // Draw Frame Overlay
             if (currentFrameImg) {
                 ctx.drawImage(currentFrameImg, 0, 0, STRIP_W, STRIP_H);
             }
             
-            resultPreview.src = canvas.toDataURL();
+            resultPreview.src = canvas.toDataURL('image/png');
         }
 
         function downloadImage() {
-            const a = document.createElement('a');
-            a.download = `photocard-${Date.now()}.png`;
-            a.href = canvas.toDataURL();
-            a.click();
+            const link = document.createElement('a');
+            link.download = `photobooth-${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
         }
 
         function toggleUI(state) {
+            const initialControls = document.getElementById('initial-controls');
+            const retakeControls = document.getElementById('retake-controls');
             const btnStart = document.getElementById('btn-start');
-            const btnDl = document.getElementById('btn-download');
-            const btnReset = document.getElementById('btn-reset');
 
             if(state === 'capturing') {
+                // Hiding Retake, showing Start (disabled)
+                initialControls.style.display = 'block';
+                retakeControls.style.display = 'none';
+                
                 btnStart.disabled = true;
                 btnStart.innerText = "JEPRET...";
                 btnStart.style.backgroundColor = "#ccc";
                 btnStart.style.boxShadow = "none";
-                btnDl.style.display = 'none';
-                btnReset.style.display = 'none';
+                
                 resultPreview.style.display = 'none';
-            } else if (state === 'done') {
-                btnStart.style.display = 'none';
-                btnDl.style.display = 'flex';
-                btnReset.style.display = 'flex';
+                cameraWrapper.style.display = 'block';
+            } 
+            else if (state === 'done') {
+                // Hiding Start, Showing Retake
+                initialControls.style.display = 'none';
+                retakeControls.style.display = 'flex'; 
+                
                 cameraWrapper.style.display = 'none';
                 infoPanel.style.display = 'none';
                 resultPreview.style.display = 'block';
@@ -556,22 +716,28 @@
         }
 
         function resetApp() {
+            const initialControls = document.getElementById('initial-controls');
+            const retakeControls = document.getElementById('retake-controls');
             const btnStart = document.getElementById('btn-start');
+
+            // Reset UI
+            initialControls.style.display = 'block';
+            retakeControls.style.display = 'none';
+            
             btnStart.disabled = false;
             btnStart.innerText = "MULAI FOTO";
-            btnStart.style.display = 'flex';
             btnStart.style.backgroundColor = "var(--accent-main)";
             btnStart.style.boxShadow = "var(--hard-shadow)";
             
-            document.getElementById('btn-download').style.display = 'none';
-            document.getElementById('btn-reset').style.display = 'none';
             resultPreview.style.display = 'none';
-            
             cameraWrapper.style.display = 'block';
             infoPanel.style.display = 'flex';
+            
             statusText.innerText = "SIAP LAGI!";
+            photos = [];
         }
 
+        // Run
         init();
     </script>
 </body>
