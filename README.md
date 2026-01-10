@@ -1,2 +1,2 @@
 # Photobooth
-Phottobooth UE
+Photobooth SMAGO UNIVERSITY EXPO
