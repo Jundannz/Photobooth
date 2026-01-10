@@ -3,83 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photobooth University Expo</title>
+    <title>Photobooth UE</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+
     <style>
-        /* --- 1. MODERN VARIABLES & RESET --- */
+        /* --- 1. NEO-BRUTALISM VARIABLES --- */
         :root {
-            --primary: #8b5cf6;       /* Violet Modern */
-            --primary-hover: #7c3aed;
-            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            --glass-bg: rgba(30, 41, 59, 0.7);
-            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --radius-xl: 24px;
-            --radius-md: 12px;
-            --shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
+            --bg-color: #f4f3ee;       /* Krem Kertas */
+            --card-bg: #ffffff;        /* Putih Bersih */
+            --border-color: #000000;   /* Hitam Pekat */
+            --shadow-color: #000000;
+            
+            --accent-main: #a388ee;    /* Ungu Pastel Keren */
+            --accent-hover: #9171f8;
+            --accent-green: #4ade80;   /* Hijau Neon dikit */
+            --accent-red: #fb7185;     /* Merah Pink */
+            --accent-yellow: #facc15;  /* Kuning Pop */
+            
+            --border-width: 3px;
+            --radius: 12px;
+            --hard-shadow: 6px 6px 0px 0px var(--shadow-color);
+            --hard-shadow-hover: 10px 10px 0px 0px var(--shadow-color);
+            --hard-shadow-active: 0px 0px 0px 0px var(--shadow-color);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: var(--bg-gradient);
-            color: var(--text-main);
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-color);
+            /* Pola titik-titik (Dot Pattern) khas Brutalism */
+            background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
+            background-size: 30px 30px;
+            color: var(--border-color);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 40px 20px;
         }
 
-        /* --- 2. LAYOUT RESPONSIVE --- */
-        .app-container {
-            display: grid;
-            grid-template-columns: 1.8fr 1fr; /* Kiri lebih lebar dari Kanan */
-            gap: 30px;
-            width: 100%;
-            max-width: 1200px;
-            margin-top: 20px;
+        /* --- 2. LAYOUT --- */
+        header { 
+            text-align: center; 
+            margin-bottom: 40px; 
+            background: var(--accent-yellow);
+            padding: 15px 30px;
+            border: var(--border-width) solid var(--border-color);
+            box-shadow: var(--hard-shadow);
+            transform: rotate(-2deg); /* Miring dikit biar artistik */
         }
-
-        /* Header Styles */
-        header { text-align: center; margin-bottom: 10px; }
+        
         h1 { 
             font-weight: 800; 
             font-size: 2.5rem; 
-            background: linear-gradient(to right, #a78bfa, #2dd4bf);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 5px;
+            text-transform: uppercase;
             letter-spacing: -1px;
+            margin: 0;
         }
-        .subtitle { color: var(--text-muted); font-size: 1rem; }
 
-        /* --- 3. PANEL STYLES (GLASSMORPHISM) --- */
-        .glass-panel {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: var(--glass-border);
-            border-radius: var(--radius-xl);
+        .app-container {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 40px;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        /* --- 3. COMPONENTS: BRUTAL CARD --- */
+        .brutal-card {
+            background: var(--card-bg);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--radius);
             padding: 25px;
-            box-shadow: var(--shadow);
+            box-shadow: var(--hard-shadow);
+            transition: all 0.2s ease;
             display: flex;
             flex-direction: column;
-            align-items: center;
+        }
+        
+        /* Efek hover pada card container (opsional) */
+        .brutal-card:hover {
+            box-shadow: var(--hard-shadow-hover);
+            transform: translate(-2px, -2px);
         }
 
         /* --- 4. CAMERA AREA --- */
         .camera-wrapper {
             width: 100%;
             position: relative;
-            border-radius: var(--radius-md);
+            border-radius: calc(var(--radius) - 6px);
             overflow: hidden;
             aspect-ratio: 16/9;
             background: #000;
-            border: 2px solid rgba(255,255,255,0.1);
-            box-shadow: 0 0 20px rgba(139, 92, 246, 0.1); /* Glow effect tipis */
+            border: var(--border-width) solid var(--border-color);
         }
 
         video {
@@ -90,167 +111,149 @@
             display: block;
         }
 
-        /* Flash & Countdown */
+        /* Flash & Countdown Style */
         #flash-overlay {
             position: absolute; inset: 0;
             background: white; opacity: 0; pointer-events: none; z-index: 50;
-            transition: opacity 0.15s ease-out;
+            transition: opacity 0.1s ease-out;
         }
 
         #countdown {
             position: absolute; inset: 0;
             display: none; justify-content: center; align-items: center;
-            font-size: 120px; font-weight: 900; color: white;
-            background: rgba(0,0,0,0.3); backdrop-filter: blur(2px);
+            font-size: 150px; font-weight: 900; color: var(--accent-yellow);
+            -webkit-text-stroke: 4px black; /* Stroke hitam di text */
             z-index: 40;
-            animation: pulse 1s infinite;
         }
 
-        /* --- 5. CONTROLS AREA --- */
+        /* --- 5. CONTROLS --- */
         .controls-wrapper {
-            align-items: stretch; /* Agar lebar penuh */
             gap: 20px;
+            background: #fff;
         }
 
-        .control-group { margin-bottom: 15px; }
+        .control-group { margin-bottom: 20px; }
+        
         .label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-muted);
+            display: inline-block;
+            font-weight: 800;
+            background: black;
+            color: white;
+            padding: 4px 8px;
+            font-size: 0.9rem;
             margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            transform: skew(-5deg); /* Label miring */
         }
 
-        /* Custom Inputs */
+        /* Inputs & Selects */
         select, input[type="file"] {
             width: 100%;
-            padding: 12px 16px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--radius-md);
-            color: white;
+            padding: 12px;
+            background: #fff;
+            border: var(--border-width) solid var(--border-color);
+            border-radius: 8px;
             font-family: inherit;
-            font-size: 0.95rem;
-            transition: 0.3s;
+            font-weight: 700;
             cursor: pointer;
+            box-shadow: 4px 4px 0px 0px #ccc;
+            transition: 0.2s;
         }
-        select:hover, input[type="file"]:hover { border-color: var(--primary); }
-        select:focus { border-color: var(--primary); outline: 0; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2); }
+        select:active, select:focus, input:active {
+            box-shadow: 2px 2px 0px 0px #000;
+            transform: translate(2px, 2px);
+        }
 
         /* Frame Grid */
         .frame-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            gap: 12px;
         }
         .frame-item {
             aspect-ratio: 1/1.5;
-            background-color: #334155;
-            border-radius: 8px;
-            border: 2px solid transparent;
+            background-color: #f0f0f0;
+            border: 2px solid #ccc;
             cursor: pointer;
-            position: relative;
-            overflow: hidden;
             background-size: cover;
             background-position: center;
-            transition: all 0.2s;
+            transition: 0.2s;
+            position: relative;
         }
-        .frame-item:hover { transform: translateY(-2px); }
+        .frame-item:hover {
+            border-color: black;
+            transform: scale(1.05);
+        }
         .frame-item.active {
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
-        }
-        .frame-item span {
-            position: absolute; bottom: 0; left: 0; right: 0;
-            background: rgba(0,0,0,0.7); color: white;
-            font-size: 10px; text-align: center; padding: 3px;
+            border: 3px solid black;
+            box-shadow: 4px 4px 0px 0px var(--accent-yellow);
+            z-index: 2;
         }
 
-        /* Buttons */
+        /* Buttons: The core of Brutalism */
         .btn {
             width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: var(--radius-md);
-            font-weight: 700;
-            font-size: 1rem;
+            padding: 16px;
+            border: var(--border-width) solid var(--border-color);
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 1.1rem;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.1s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            margin-top: 10px;
+            margin-top: 15px;
+            text-transform: uppercase;
+            box-shadow: var(--hard-shadow);
+            position: relative;
         }
 
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        .btn:active {
+            transform: translate(4px, 4px);
+            box-shadow: var(--hard-shadow-active);
         }
-        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); }
-        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-        .btn-secondary { background: #10b981; color: white; display: none; }
-        .btn-secondary:hover { background: #059669; }
+        .btn-primary { background: var(--accent-main); color: black; }
+        .btn-primary:hover { background: #b09af0; }
+        .btn-primary:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; transform: translate(4px, 4px); }
 
-        .btn-danger { background: #ef4444; color: white; display: none; margin-top: 5px;}
-        .btn-danger:hover { background: #dc2626; }
+        .btn-secondary { background: var(--accent-green); color: black; display: none; }
+        .btn-danger { background: var(--accent-red); color: black; display: none; margin-top: 10px; }
 
-        /* Result Preview Image */
+        /* Result Preview */
         #result-preview {
             max-width: 100%;
             height: auto;
-            border-radius: 8px;
-            margin-top: 15px;
-            border: 4px solid white;
+            margin-top: 20px;
+            border: var(--border-width) solid black;
             display: none;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            box-shadow: 8px 8px 0px rgba(0,0,0,0.2);
         }
 
-        /* --- 6. MOBILE RESPONSIVE (@MEDIA) --- */
+        /* --- MOBILE RESPONSIVE --- */
         @media (max-width: 768px) {
             .app-container {
-                grid-template-columns: 1fr; /* Jadi 1 Kolom */
-                gap: 20px;
+                grid-template-columns: 1fr;
             }
-            
-            h1 { font-size: 1.8rem; }
-            
             .camera-wrapper {
-                /* Di HP, kamera full width */
-                aspect-ratio: 4/5; /* Agak tinggi dikit buat selfie portrait */
+                aspect-ratio: 4/5;
             }
-            
-            video { object-fit: cover; } /* Pastikan cover */
-
-            .glass-panel { padding: 20px; }
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.8; }
-            100% { transform: scale(1); opacity: 1; }
+            header { margin-bottom: 20px; transform: rotate(0deg); }
         }
 
         canvas { display: none; }
-        
-        /* Helper Text */
-        #status-text { text-align: center; margin-top: 10px; color: var(--text-muted); font-size: 0.8rem; }
+        #status-text { text-align: center; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Photobooth University Expo</h1>
-        <p class="subtitle">Foto disini hahay</p>
+        <h1>PHOTOBOOTH UNIVERSITY EXPO</h1>
     </header>
 
     <div class="app-container">
         
-        <div class="glass-panel">
+        <div class="brutal-card">
             <div class="camera-wrapper" id="camera-wrapper">
                 <video id="video" autoplay playsinline></video>
                 <div id="countdown">3</div>
@@ -260,61 +263,61 @@
             <img id="result-preview" alt="Hasil Foto">
         </div>
 
-        <div class="glass-panel controls-wrapper">
+        <div class="brutal-card controls-wrapper">
             
             <div class="control-group">
-                <label class="label">Sumber Kamera</label>
+                <span class="label">1. SOURCE</span>
                 <select id="camera-source" onchange="changeCamera()">
                     <option value="">Mencari kamera...</option>
                 </select>
             </div>
 
             <div class="control-group">
-                <label class="label">Pilih Bingkai</label>
+                <span class="label">2. PILIH FRAME</span>
                 <div class="frame-grid" id="frame-list"></div>
                 
-                <div style="margin-top: 10px;">
-                    <label class="label" style="font-size: 0.7rem;">Atau Upload Sendiri (PNG)</label>
+                <div style="margin-top: 12px;">
+                    <span class="label" style="font-size: 0.7rem; background: transparent; color: black; padding: 0;">Atau Upload (PNG)</span>
                     <input type="file" id="custom-upload" accept="image/png">
                 </div>
             </div>
 
             <div class="control-group">
-                <label class="label">Timer</label>
+                <span class="label">3. TIMER</span>
                 <select id="timer-select">
-                    <option value="3">3 Detik (Cepat)</option>
-                    <option value="5" selected>5 Detik (Normal)</option>
-                    <option value="10">10 Detik (Santai)</option>
+                    <option value="3">3 Detik</option>
+                    <option value="5" selected>5 Detik</option>
+                    <option value="10">10 Detik</option>
                 </select>
             </div>
 
             <button class="btn btn-primary" id="btn-start" onclick="startSession()">
-                Mulai Foto (3 Pose)
+                MULAI FOTO
             </button>
 
             <button class="btn btn-secondary" id="btn-download" onclick="downloadImage()">
-                Simpan Foto
+                DOWNLOAD
             </button>
             
             <button class="btn btn-danger" id="btn-reset" onclick="resetApp()">
-                Foto Ulang
+                ULANG
             </button>
 
-            <p id="status-text">Kamera siap digunakan...</p>
+            <p id="status-text">SIAP JEPRET...</p>
         </div>
     </div>
 
     <canvas id="canvas"></canvas>
 
     <script>
-        // === KONFIGURASI ===
+        // === SCRIPT TETAP SAMA SEPERTI SEBELUMNYA, TIDAK ADA PERUBAHAN LOGIKA ===
+        
         const STRIP_W = 460;
         const STRIP_H = 1200;
         const PHOTO_W = 400;
         const PHOTO_H = 300;
         const PHOTO_COUNT = 3;
 
-        // === ELEMENTS ===
         const video = document.getElementById('video');
         const cameraSelect = document.getElementById('camera-source');
         const canvas = document.getElementById('canvas');
@@ -325,35 +328,28 @@
         const statusText = document.getElementById('status-text');
         const flashOverlay = document.getElementById('flash-overlay');
 
-        // === STATE ===
         let currentStream = null;
         let photos = [];
         let currentFrameImg = null; 
 
-        // === DATA FRAME (PASTIKAN FILE ADA DI FOLDER ASSETS) ===
+        // PASTIKAN NAMA FILE SESUAI DENGAN FOLDER KAMU
         const presetFrames = [
-            { name: "Frame 1", src: "assets/frame1.png" },
-            { name: "Frame 2", src: "assets/frame2.png" },
-            { name: "Frame 3", src: "assets/frame3.png" },
-            { name: "Frame 4", src: "assets/frame4.png" },
-            { name: "Frame 5", src: "assets/frame5.png" }
+            { name: "F1", src: "assets/frame1.png" },
+            { name: "F2", src: "assets/frame2.png" },
+            { name: "F3", src: "assets/frame3.png" },
+            { name: "F4", src: "assets/frame4.png" },
+            { name: "F5", src: "assets/frame5.png" }
         ];
 
-        // === INITIALIZATION ===
         async function init() {
-            // Coba load frame pertama, tapi handle error kalau file gak ada
             if(presetFrames.length > 0) {
-                // Kita tidak panggil loadFrame langsung di init untuk mencegah error console
-                // jika user belum punya file-nya.
                 renderPresets();
-                // Select visual item pertama
                 const firstItem = document.getElementById('preset-0');
                 if(firstItem) firstItem.click(); 
             }
             await getCameras();
         }
 
-        // === LOGIKA KAMERA ===
         async function getCameras() {
             try {
                 await navigator.mediaDevices.getUserMedia({ video: true });
@@ -380,49 +376,40 @@
                 });
                 video.srcObject = stream;
                 currentStream = stream;
-                statusText.innerText = "Kamera aktif & Siap!";
+                statusText.innerText = "KAMERA AKTIF";
             } catch (err) {
-                statusText.innerText = "Gagal mengakses kamera yang dipilih.";
+                statusText.innerText = "Gagal akses kamera.";
             }
         }
         function changeCamera() { startCamera(cameraSelect.value); }
 
-        // === LOGIKA FRAME (GAMBAR) ===
         function renderPresets() {
             frameList.innerHTML = '';
             presetFrames.forEach((frame, idx) => {
                 const div = document.createElement('div');
                 div.className = `frame-item`;
                 div.id = `preset-${idx}`;
-                // Set background image untuk thumbnail
                 div.style.backgroundImage = `url('${frame.src}')`; 
-                // Fallback warna kalau gambar error/tidak ada
-                div.style.backgroundColor = '#475569'; 
-                
-                div.innerHTML = `<span>${frame.name}</span>`;
                 div.onclick = () => loadFrame(frame.src, idx);
                 frameList.appendChild(div);
             });
         }
 
         function loadFrame(src, index) {
-            // Update UI Aktif
             document.querySelectorAll('.frame-item').forEach(el => el.classList.remove('active'));
             if(index !== null) {
                 const el = document.getElementById(`preset-${index}`);
                 if(el) el.classList.add('active');
             }
-
-            // Load Gambar ke Memory
             const img = new Image();
             img.onload = () => {
                 currentFrameImg = img; 
-                statusText.innerText = "Frame Terpilih: " + (index !== null ? presetFrames[index].name : "Custom Upload");
+                statusText.innerText = "FRAME DIPILIH";
                 if(index !== null) document.getElementById('custom-upload').value = "";
             };
             img.onerror = () => {
-                statusText.innerText = "⚠️ Gambar frame tidak ditemukan. Pastikan file ada di folder 'assets'.";
-                currentFrameImg = null; // Reset kalau error
+                statusText.innerText = "⚠️ Frame tidak ditemukan di assets/";
+                currentFrameImg = null;
             };
             img.src = src;
         }
@@ -431,31 +418,26 @@
             const file = e.target.files[0];
             if(file) {
                 const reader = new FileReader();
-                reader.onload = (evt) => {
-                    loadFrame(evt.target.result, null);
-                };
+                reader.onload = (evt) => { loadFrame(evt.target.result, null); };
                 reader.readAsDataURL(file);
             }
         });
 
-        // === PROSES PHOTOBOOTH ===
         async function startSession() {
             photos = [];
             toggleUI('capturing');
             const timer = parseInt(document.getElementById('timer-select').value);
-
             for(let i=0; i<PHOTO_COUNT; i++) {
-                statusText.innerText = `Pose ${i+1} dari ${PHOTO_COUNT}... Siap-siap!`;
+                statusText.innerText = `POSE ${i+1} / ${PHOTO_COUNT}`;
                 await doCountdown(timer);
                 triggerFlash(); 
                 photos.push(smartCropCapture());
             }
-
-            statusText.innerText = "Sedang menyusun foto...";
+            statusText.innerText = "MEMPROSES...";
             setTimeout(() => {
                 renderResult();
                 toggleUI('done');
-                statusText.innerText = "Selesai! Silakan unduh foto.";
+                statusText.innerText = "SELESAI!";
             }, 500);
         }
 
@@ -481,7 +463,6 @@
             });
         }
 
-        // === RENDER HASIL ===
         function smartCropCapture() {
             const temp = document.createElement('canvas');
             temp.width = PHOTO_W; temp.height = PHOTO_H;
@@ -489,7 +470,6 @@
             const vidW = video.videoWidth; const vidH = video.videoHeight;
             const sourceAspect = vidW / vidH; const targetAspect = PHOTO_W / PHOTO_H;
             let sx, sy, sW, sH;
-
             if (sourceAspect > targetAspect) {
                 sH = vidH; sW = vidH * targetAspect;
                 sy = 0; sx = (vidW - sW) / 2;
@@ -497,7 +477,6 @@
                 sW = vidW; sH = vidW / targetAspect;
                 sx = 0; sy = (vidH - sH) / 2;
             }
-
             tCtx.translate(PHOTO_W, 0); tCtx.scale(-1, 1);
             tCtx.drawImage(video, sx, sy, sW, sH, 0, 0, PHOTO_W, PHOTO_H);
             return temp;
@@ -505,43 +484,30 @@
 
         function renderResult() {
             canvas.width = STRIP_W; canvas.height = STRIP_H;
-
-            // 1. Background Putih
             ctx.fillStyle = "white"; 
             ctx.fillRect(0, 0, STRIP_W, STRIP_H);
-
-            // 2. Tempel Foto
             const startX = (STRIP_W - PHOTO_W) / 2;
             const totalPhotoH = PHOTO_COUNT * PHOTO_H;
             const spaceAvailable = STRIP_H - totalPhotoH;
             const gap = spaceAvailable / (PHOTO_COUNT + 1); 
             let currentY = gap;
-
             photos.forEach(photo => {
                 ctx.drawImage(photo, startX, currentY);
                 currentY += PHOTO_H + gap;
             });
-
-            // 3. Tempel Frame
             if (currentFrameImg) {
                 ctx.drawImage(currentFrameImg, 0, 0, STRIP_W, STRIP_H);
             } else {
-                // Fallback jika tidak ada frame image
-                ctx.strokeStyle = "#8b5cf6"; ctx.lineWidth = 10;
+                ctx.strokeStyle = "black"; ctx.lineWidth = 10;
                 ctx.strokeRect(0,0,STRIP_W, STRIP_H);
-                ctx.fillStyle = "#1e293b"; ctx.font = "bold 20px sans-serif";
-                ctx.textAlign = "center";
-                ctx.fillText("FRAME TIDAK DITEMUKAN", STRIP_W/2, 50);
             }
-
             resultPreview.src = canvas.toDataURL();
             resultPreview.style.display = 'block';
         }
 
-        // === HELPERS ===
         function downloadImage() {
             const a = document.createElement('a');
-            a.download = `photobooth-${Date.now()}.png`;
+            a.download = `photocard-${Date.now()}.png`;
             a.href = canvas.toDataURL();
             a.click();
         }
@@ -554,13 +520,17 @@
 
             if(state === 'capturing') {
                 btnStart.disabled = true;
-                btnStart.innerText = "Sedang Mengambil Foto...";
+                btnStart.innerText = "JEPRET...";
+                btnStart.style.backgroundColor = "#ccc";
+                btnStart.style.transform = "translate(4px, 4px)";
+                btnStart.style.boxShadow = "none";
+                
                 btnDl.style.display = 'none';
                 btnReset.style.display = 'none';
                 resultPreview.style.display = 'none';
             } else if (state === 'done') {
                 btnStart.style.display = 'none';
-                btnDl.style.display = 'flex'; // Flex agar icon rata tengah
+                btnDl.style.display = 'flex';
                 btnReset.style.display = 'flex';
                 camWrapper.style.display = 'none';
             }
@@ -569,14 +539,17 @@
         function resetApp() {
             const btnStart = document.getElementById('btn-start');
             btnStart.disabled = false;
-            btnStart.innerHTML = "📸 Mulai Foto (3 Pose)";
+            btnStart.innerText = "MULAI FOTO";
             btnStart.style.display = 'flex';
+            btnStart.style.backgroundColor = "var(--accent-main)";
+            btnStart.style.transform = "translate(0, 0)";
+            btnStart.style.boxShadow = "var(--hard-shadow)";
             
             document.getElementById('btn-download').style.display = 'none';
             document.getElementById('btn-reset').style.display = 'none';
             resultPreview.style.display = 'none';
             document.getElementById('camera-wrapper').style.display = 'block';
-            statusText.innerText = "Siap untuk sesi baru!";
+            statusText.innerText = "SIAP LAGI!";
         }
 
         init();
