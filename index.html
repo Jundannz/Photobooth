@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photobooth Ultimate V5.1 (Flash)</title>
+    <style>
+        :root { --primary: #6c5ce7; --bg: #1e272e; --panel: #2f3640; }
+        
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        h1 { margin-bottom: 5px; }
+        .subtitle { color: #aaa; margin-bottom: 20px; font-size: 0.9rem; }
+
+        .main-container {
+            display: flex; gap: 20px; width: 100%; max-width: 1100px;
+            flex-wrap: wrap; justify-content: center; align-items: flex-start;
+        }
+
+        .left-panel { flex: 2; min-width: 320px; display: flex; flex-direction: column; align-items: center; }
+        
+        .camera-box {
+            position: relative;
+            width: 100%; max-width: 600px; aspect-ratio: 16/9;
+            background: black; border: 4px solid white; border-radius: 12px;
+            overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+
+        /* --- FITUR BARU: FLASH OVERLAY --- */
+        #flash-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 20;
+            transition: opacity 0.2s ease-out; /* Efek fade out halus */
+        }
+
+        #countdown {
+            position: absolute; inset: 0;
+            display: none; justify-content: center; align-items: center;
+            font-size: 100px; font-weight: 900;
+            background: rgba(0,0,0,0.4); text-shadow: 0 0 20px rgba(0,0,0,0.8);
+            z-index: 10;
+        }
+
+        #result-preview {
+            width: 100%; max-width: 300px; margin-top: 20px;
+            border-radius: 8px; border: 2px solid #555; display: none;
+        }
+
+        .right-panel {
+            flex: 1; min-width: 300px; background: var(--panel);
+            padding: 20px; border-radius: 15px;
+        }
+
+        .section-title { font-size: 0.9rem; font-weight: bold; color: #dfe6e9; margin: 15px 0 8px; border-bottom: 1px solid #555; padding-bottom: 5px; }
+        .section-title:first-child { margin-top: 0; }
+
+        select, button, input[type="file"] {
+            width: 100%; padding: 10px; margin-bottom: 10px;
+            border-radius: 8px; border: none; font-family: inherit;
+        }
+
+        .frame-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+        .frame-item {
+            aspect-ratio: 1/2; background: #444; border: 3px solid transparent;
+            border-radius: 6px; cursor: pointer; position: relative; overflow: hidden;
+        }
+        .frame-item.active { border-color: var(--primary); box-shadow: 0 0 10px var(--primary); }
+        .frame-color { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; text-align: center; padding: 2px; }
+
+        .btn-primary { background: var(--primary); color: white; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+        .btn-primary:hover { background: #5649c0; }
+        .btn-secondary { background: #00b894; color: white; cursor: pointer; display: none; }
+        .btn-danger { background: #d63031; color: white; cursor: pointer; display: none; }
+
+        canvas { display: none; }
+    </style>
+</head>
+<body>
+
+    <h1>Photobooth University Expo</h1>
+    <p class="subtitle">Koneksikan kamera, pilih frame, dan beraksi!</p>
+
+    <div class="main-container">
+        
+        <div class="left-panel">
+            <div class="camera-box" id="camera-wrapper">
+                <video id="video" autoplay playsinline></video>
+                <div id="countdown">3</div>
+                <div id="flash-overlay"></div>
+            </div>
+            <img id="result-preview" alt="Hasil Foto">
+        </div>
+
+        <div class="right-panel">
+            
+            <div class="section-title">📡 1. Sumber Kamera</div>
+            <select id="camera-source" onchange="changeCamera()">
+                <option value="">Mencari kamera...</option>
+            </select>
+
+            <div class="section-title">🖼️ 2. Pilih Frame</div>
+            
+            <div style="font-size: 12px; margin-bottom:5px; color:#aaa;">Pilih Preset Developer:</div>
+            <div class="frame-grid" id="frame-list"></div>
+
+            <div style="font-size: 12px; margin-bottom:5px; color:#aaa; margin-top: 10px;">Atau Upload Sendiri (PNG):</div>
+            <input type="file" id="custom-upload" accept="image/png" style="background: #444; color: white; font-size: 12px;">
+
+            <div class="section-title">⏱️ 3. Eksekusi</div>
+            <select id="timer-select">
+                <option value="3">Timer: 3 Detik</option>
+                <option value="5" selected>Timer: 5 Detik</option>
+            </select>
+
+            <button class="btn-primary" id="btn-start" onclick="startSession()">📸 Mulai Foto (3x)</button>
+            <button class="btn-secondary" id="btn-download" onclick="downloadImage()">⬇️ Download Hasil</button>
+            <button class="btn-danger" id="btn-reset" onclick="resetApp()">🔄 Foto Ulang</button>
+
+            <p id="status-text" style="font-size: 12px; color: #aaa; margin-top: 10px; text-align: center;">Siap...</p>
+        </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        // === CONFIGURATION ===
+        const STRIP_W = 460;
+        const STRIP_H = 1200;
+        const PHOTO_W = 400;
+        const PHOTO_H = 300;
+        const PHOTO_COUNT = 3;
+
+        // === ELEMENTS ===
+        const video = document.getElementById('video');
+        const cameraSelect = document.getElementById('camera-source');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const resultPreview = document.getElementById('result-preview');
+        const countdownEl = document.getElementById('countdown');
+        const frameList = document.getElementById('frame-list');
+        const statusText = document.getElementById('status-text');
+        const flashOverlay = document.getElementById('flash-overlay'); // Element Flash Baru
+
+        // === STATE ===
+        let currentStream = null;
+        let photos = [];
+        let uploadedFrameImg = null;
+        let selectedPresetIndex = 0;
+
+        const presetFrames = [
+            { name: "Minimalis Putih", color: "#ffffff", border: "#dddddd", text: "#333" },
+            { name: "Hitam Elegan", color: "#111111", border: "#333333", text: "#fff" },
+            { name: "Pink Pastel", color: "#ffcccc", border: "#ff7979", text: "#d63031" },
+            { name: "Biru Langit", color: "#dff9fb", border: "#7ed6df", text: "#22a6b3" },
+            { name: "Vintage Kuning", color: "#f6e58d", border: "#f0932b", text: "#e17055" },
+            { name: "Ungu Gelap", color: "#4834d4", border: "#686de0", text: "#fff" }
+        ];
+
+        // === INITIALIZATION ===
+        async function init() {
+            renderPresets();
+            await getCameras();
+        }
+
+        async function getCameras() {
+            try {
+                await navigator.mediaDevices.getUserMedia({ video: true });
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(d => d.kind === 'videoinput');
+                cameraSelect.innerHTML = '';
+                videoDevices.forEach(device => {
+                    const opt = document.createElement('option');
+                    opt.value = device.deviceId;
+                    opt.text = device.label || `Camera ${cameraSelect.length + 1}`;
+                    cameraSelect.appendChild(opt);
+                });
+                if(videoDevices.length > 0) startCamera(videoDevices[0].deviceId);
+            } catch (err) {
+                statusText.innerText = "Error: " + err.message;
+            }
+        }
+
+        async function startCamera(deviceId) {
+            if(currentStream) currentStream.getTracks().forEach(t => t.stop());
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { deviceId: deviceId ? { exact: deviceId } : undefined, width: { ideal: 1920 }, height: { ideal: 1080 } }
+                });
+                video.srcObject = stream;
+                currentStream = stream;
+                statusText.innerText = "Kamera aktif: HD Ready";
+            } catch (err) {
+                statusText.innerText = "Gagal akses kamera";
+            }
+        }
+
+        function changeCamera() { startCamera(cameraSelect.value); }
+
+        // === FRAME LOGIC ===
+        function renderPresets() {
+            frameList.innerHTML = '';
+            presetFrames.forEach((frame, idx) => {
+                const div = document.createElement('div');
+                div.className = `frame-item ${idx === selectedPresetIndex ? 'active' : ''}`;
+                div.innerHTML = `<div class="frame-color" style="background:${frame.color}; color:${frame.text}">${frame.name}</div>`;
+                div.onclick = () => selectPreset(idx);
+                frameList.appendChild(div);
+            });
+        }
+
+        function selectPreset(index) {
+            selectedPresetIndex = index;
+            uploadedFrameImg = null;
+            document.getElementById('custom-upload').value = "";
+            renderPresets();
+            statusText.innerText = `Terpilih: ${presetFrames[index].name}`;
+        }
+
+        document.getElementById('custom-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        uploadedFrameImg = img;
+                        document.querySelectorAll('.frame-item').forEach(el => el.classList.remove('active'));
+                        statusText.innerText = "Menggunakan Frame Custom Upload";
+                    };
+                    img.src = evt.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // === PHOTOBOOTH PROCESS ===
+        async function startSession() {
+            photos = [];
+            toggleUI('capturing');
+            const timer = parseInt(document.getElementById('timer-select').value);
+
+            for(let i=0; i<PHOTO_COUNT; i++) {
+                statusText.innerText = `Foto ke-${i+1} dari ${PHOTO_COUNT}`;
+                await doCountdown(timer);
+                
+                // === EFEK FLASH (BARU) ===
+                triggerFlash(); 
+                
+                // Ambil gambar
+                photos.push(smartCropCapture());
+            }
+
+            statusText.innerText = "Memproses hasil...";
+            renderResult();
+            toggleUI('done');
+        }
+
+        // Fungsi Memunculkan Efek Flash
+        function triggerFlash() {
+            flashOverlay.style.opacity = 1; // Putih Terang
+            setTimeout(() => {
+                flashOverlay.style.opacity = 0; // Fade out perlahan
+            }, 100); // Tahan putih selama 100ms sebelum fade
+        }
+
+        function doCountdown(sec) {
+            return new Promise(resolve => {
+                countdownEl.style.display = 'flex';
+                let c = sec;
+                countdownEl.innerText = c;
+                const int = setInterval(() => {
+                    c--;
+                    if(c > 0) countdownEl.innerText = c;
+                    else {
+                        clearInterval(int);
+                        countdownEl.style.display = 'none';
+                        resolve();
+                    }
+                }, 1000);
+            });
+        }
+
+        // === SMART CROP & RENDER ===
+        function smartCropCapture() {
+            const temp = document.createElement('canvas');
+            temp.width = PHOTO_W; temp.height = PHOTO_H;
+            const tCtx = temp.getContext('2d');
+            const vidW = video.videoWidth; const vidH = video.videoHeight;
+            const sourceAspect = vidW / vidH; const targetAspect = PHOTO_W / PHOTO_H;
+            let sx, sy, sW, sH;
+
+            if (sourceAspect > targetAspect) {
+                sH = vidH; sW = vidH * targetAspect;
+                sy = 0; sx = (vidW - sW) / 2;
+            } else {
+                sW = vidW; sH = vidW / targetAspect;
+                sx = 0; sy = (vidH - sH) / 2;
+            }
+
+            tCtx.translate(PHOTO_W, 0); tCtx.scale(-1, 1);
+            tCtx.drawImage(video, sx, sy, sW, sH, 0, 0, PHOTO_W, PHOTO_H);
+            return temp;
+        }
+
+        function renderResult() {
+            canvas.width = STRIP_W; canvas.height = STRIP_H;
+
+            if (uploadedFrameImg) {
+                ctx.fillStyle = "white"; ctx.fillRect(0, 0, STRIP_W, STRIP_H);
+            } else {
+                const preset = presetFrames[selectedPresetIndex];
+                ctx.fillStyle = preset.color; ctx.fillRect(0, 0, STRIP_W, STRIP_H);
+            }
+
+            const startX = (STRIP_W - PHOTO_W) / 2;
+            const totalPhotoH = PHOTO_COUNT * PHOTO_H;
+            const spaceAvailable = STRIP_H - totalPhotoH;
+            const gap = spaceAvailable / (PHOTO_COUNT + 1); 
+            let currentY = gap;
+
+            photos.forEach(photo => {
+                if (!uploadedFrameImg) {
+                    const preset = presetFrames[selectedPresetIndex];
+                    ctx.fillStyle = preset.border;
+                    ctx.fillRect(startX - 5, currentY - 5, PHOTO_W + 10, PHOTO_H + 10);
+                }
+                ctx.drawImage(photo, startX, currentY);
+                currentY += PHOTO_H + gap;
+            });
+
+            if (uploadedFrameImg) {
+                ctx.drawImage(uploadedFrameImg, 0, 0, STRIP_W, STRIP_H);
+            } else {
+                const preset = presetFrames[selectedPresetIndex];
+                ctx.fillStyle = preset.text;
+                ctx.font = "bold 24px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText("PHOTOBOOTH", STRIP_W/2, STRIP_H - 25);
+            }
+            resultPreview.src = canvas.toDataURL();
+            resultPreview.style.display = 'block';
+        }
+
+        // === HELPERS ===
+        function downloadImage() {
+            const a = document.createElement('a');
+            a.download = `photobooth-${Date.now()}.png`;
+            a.href = canvas.toDataURL();
+            a.click();
+        }
+
+        function toggleUI(state) {
+            const btnStart = document.getElementById('btn-start');
+            const btnDl = document.getElementById('btn-download');
+            const btnReset = document.getElementById('btn-reset');
+            const camWrapper = document.getElementById('camera-wrapper');
+
+            if(state === 'capturing') {
+                btnStart.disabled = true;
+                btnDl.style.display = 'none';
+                btnReset.style.display = 'none';
+                resultPreview.style.display = 'none';
+            } else if (state === 'done') {
+                btnStart.style.display = 'none';
+                btnDl.style.display = 'block';
+                btnReset.style.display = 'block';
+                camWrapper.style.display = 'none';
+            }
+        }
+
+        function resetApp() {
+            document.getElementById('btn-start').disabled = false;
+            document.getElementById('btn-start').style.display = 'block';
+            document.getElementById('btn-download').style.display = 'none';
+            document.getElementById('btn-reset').style.display = 'none';
+            resultPreview.style.display = 'none';
+            document.getElementById('camera-wrapper').style.display = 'block';
+            statusText.innerText = "Siap...";
+        }
+
+        init();
+    </script>
+</body>
+</html>
