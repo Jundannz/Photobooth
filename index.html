@@ -249,7 +249,7 @@
             display: none; 
             width: 100%;
             gap: 0;
-            align-items: center; /* Ubah ke center agar divider rapi */
+            align-items: center; 
             justify-content: center;
             flex-wrap: wrap;
         }
@@ -261,14 +261,14 @@
             flex: 1 1 300px;
         }
         
-        /* NEW: SEKAT / DIVIDER */
+        /* SEKAT / DIVIDER */
         .result-divider {
             width: 4px;
-            height: 350px; /* Tinggi fix untuk tampilan desktop */
+            height: 350px; 
             background-color: black;
             margin: 0 30px;
             border-radius: 2px;
-            opacity: 0.15; /* Sedikit transparan agar tidak terlalu keras */
+            opacity: 0.15; 
         }
         
         .gif-container {
@@ -276,11 +276,14 @@
             display: flex; flex-direction: column; gap: 10px;
         }
 
+        /* --- UPDATE GIF STYLE KE 16:9 --- */
         #gif-preview {
             width: 100%; height: auto;
             border: var(--border-width) solid black;
             box-shadow: 6px 6px 0px var(--accent-main);
             transform: rotate(2deg);
+            aspect-ratio: 16/9; /* Memaksa rasio 16:9 */
+            object-fit: cover; /* Agar gambar mengisi penuh area */
         }
         
         .gif-label {
@@ -297,7 +300,6 @@
             #result-container { flex-direction: column; align-items: center; }
             #result-preview { max-height: 50vh; width: auto; }
             
-            /* Divider berubah jadi horizontal di HP */
             .result-divider {
                 width: 80%;
                 height: 4px;
@@ -360,7 +362,7 @@
                 <div class="result-divider"></div>
 
                 <div class="gif-container">
-                    <div class="gif-label"> GIF PREVIEW </div>
+                    <div class="gif-label"> GIF PREVIEW (16:9) </div>
                     <img id="gif-preview" alt="Loading GIF...">
                 </div>
             </div>
@@ -651,18 +653,41 @@
             }, 800);
         }
 
-        // --- GIF GENERATOR ---
+        // --- GIF GENERATOR (UPDATED TO 16:9) ---
         function generateGif() {
-            // Ubah Canvas foto menjadi Data URL (Array of strings)
-            const images = photos.map(canvas => canvas.toDataURL('image/png'));
+            // Kita ingin output GIF berasio 16:9
+            // Karena source foto 400x320 (5:4), kita harus crop tengahnya.
+            // Target Width: 400
+            // Target Height: 400 / 16 * 9 = 225
+            const GIF_W = 400;
+            const GIF_H = 225;
+
+            // Proses Crop setiap foto sebelum dijadikan GIF
+            const gifImages = photos.map(photoCanvas => {
+                const temp = document.createElement('canvas');
+                temp.width = GIF_W;
+                temp.height = GIF_H;
+                const ctx = temp.getContext('2d');
+
+                // Hitung posisi tengah (Center Crop)
+                // Source Height = 320, Target = 225. Selisih = 95.
+                // Start Y = 95 / 2 = 47.5
+                const sy = (photoCanvas.height - GIF_H) / 2;
+
+                ctx.drawImage(photoCanvas, 
+                    0, sy, GIF_W, GIF_H, // Source (x, y, w, h)
+                    0, 0, GIF_W, GIF_H   // Destination (x, y, w, h)
+                );
+                return temp.toDataURL('image/png');
+            });
             
             gifshot.createGIF({
-                images: images,
-                gifWidth: PHOTO_W,
-                gifHeight: PHOTO_H,
-                interval: 0.5, // 0.5 detik per frame
-                numFrames: 10, // dummy, karena kita pakai images array
-                frameDuration: 5, // 1 = 10ms, 5 = 50ms (default logic gifshot agak beda)
+                images: gifImages,
+                gifWidth: GIF_W,
+                gifHeight: GIF_H,
+                interval: 0.5, 
+                numFrames: 10, 
+                frameDuration: 5, 
             }, function(obj) {
                 if(!obj.error) {
                     currentGifData = obj.image;
@@ -785,7 +810,7 @@
             const stripBase64 = stripUrl.split(',')[1];
             folder.file(`Hasil_Strip_${safeName}.png`, stripBase64, {base64: true});
             
-            // 4. HASIL GIF (NEW)
+            // 4. HASIL GIF (16:9)
             if(currentGifData) {
                 // currentGifData formatnya "data:image/gif;base64,....."
                 const gifBase64 = currentGifData.split(',')[1];
