@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photobooth UE 2026</title>
+    <title>Photobooth UE 2026 - Cloud Version</title>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -276,14 +274,13 @@
             display: flex; flex-direction: column; gap: 10px;
         }
 
-        /* --- UPDATE GIF STYLE KE 16:9 --- */
         #gif-preview {
             width: 100%; height: auto;
             border: var(--border-width) solid black;
             box-shadow: 6px 6px 0px var(--accent-main);
             transform: rotate(2deg);
-            aspect-ratio: 16/9; /* Memaksa rasio 16:9 */
-            object-fit: cover; /* Agar gambar mengisi penuh area */
+            aspect-ratio: 16/9; 
+            object-fit: cover; 
         }
         
         .gif-label {
@@ -345,7 +342,7 @@
                 <div class="step-list">
                     <div class="step-item"><span class="step-num">1</span> PILIH FRAME DAN TIMER</div>
                     <div class="step-item"><span class="step-num">2</span> KLIK MULAI FOTO</div>
-                    <div class="step-item"><span class="step-num">3</span> ULANG ATAU SELESAIKAN SESI (SOFT FILE AKAN DIKIRIMKAN MELALUI EMAIL)</div>
+                    <div class="step-item"><span class="step-num">3</span> SELESAI -> FOTO DIKIRIM KE EMAIL</div>
                 </div>
                 
                 <div class="marquee-wrapper">
@@ -362,7 +359,7 @@
                 <div class="result-divider"></div>
 
                 <div class="gif-container">
-                    <div class="gif-label"> GIF PREVIEW </div>
+                    <div class="gif-label"> GIF PREVIEW (16:9) </div>
                     <img id="gif-preview" alt="Loading GIF...">
                 </div>
             </div>
@@ -414,7 +411,7 @@
 
                     <hr style="border: 1px solid black; margin: 15px 0; opacity: 0.3;">
 
-                    <button class="btn btn-secondary" onclick="finishAndDownloadSession()" id="btn-download">AKHIRI SESI</button>
+                    <button class="btn btn-secondary" onclick="finishAndDownloadSession()" id="btn-download">AKHIRI & KIRIM EMAIL</button>
                 </div>
             </div>
         </div>
@@ -423,6 +420,12 @@
     <canvas id="canvas"></canvas>
 
     <script>
+        // ==========================================
+        // KONFIGURASI BACKEND (WAJIB DIISI)
+        // ==========================================
+        // Paste URL "Web App" dari Google Apps Script di dalam tanda kutip di bawah ini:
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxJF2im2qg-w1okJTnFlfOzE3nOzfZzpNPjtGmRKzrLrHoZKzyNSQs9ojjBg9hocks/exec"; 
+        
         // --- CONFIG ---
         const STRIP_W = 920;      
         const STRIP_H = 1200;     
@@ -465,7 +468,7 @@
         // Data User
         let currentUserName = "";
         let currentUserEmail = "";
-        let currentGifData = null; // Menyimpan data base64 GIF
+        let currentGifData = null; 
 
         // --- PRESETS ---
         const presetFrames = [
@@ -631,8 +634,8 @@
             
             statusText.innerText = "MEMPROSES ULANG...";
             setTimeout(() => {
-                renderResult(); // Render Strip
-                generateGif();  // Render GIF Ulang
+                renderResult(); 
+                generateGif();  
                 
                 cameraWrapper.style.display = 'none';
                 resultContainer.style.display = 'flex';
@@ -653,30 +656,22 @@
             }, 800);
         }
 
-        // --- GIF GENERATOR (UPDATED TO 16:9) ---
+        // --- GIF GENERATOR ---
         function generateGif() {
-            // Kita ingin output GIF berasio 16:9
-            // Karena source foto 400x320 (5:4), kita harus crop tengahnya.
-            // Target Width: 400
-            // Target Height: 400 / 16 * 9 = 225
             const GIF_W = 400;
             const GIF_H = 225;
 
-            // Proses Crop setiap foto sebelum dijadikan GIF
             const gifImages = photos.map(photoCanvas => {
                 const temp = document.createElement('canvas');
                 temp.width = GIF_W;
                 temp.height = GIF_H;
                 const ctx = temp.getContext('2d');
 
-                // Hitung posisi tengah (Center Crop)
-                // Source Height = 320, Target = 225. Selisih = 95.
-                // Start Y = 95 / 2 = 47.5
                 const sy = (photoCanvas.height - GIF_H) / 2;
 
                 ctx.drawImage(photoCanvas, 
-                    0, sy, GIF_W, GIF_H, // Source (x, y, w, h)
-                    0, 0, GIF_W, GIF_H   // Destination (x, y, w, h)
+                    0, sy, GIF_W, GIF_H, 
+                    0, 0, GIF_W, GIF_H   
                 );
                 return temp.toDataURL('image/png');
             });
@@ -783,56 +778,79 @@
             resultPreview.src = canvas.toDataURL('image/png');
         }
 
-        // --- ZIP & DOWNLOAD LOGIC ---
+        // ==========================================
+        //  LOGIKA BARU: UPLOAD & EMAIL
+        // ==========================================
         function finishAndDownloadSession() {
             const btn = document.getElementById('btn-download');
-            btn.innerText = "MENYIMPAN...";
-            btn.disabled = true;
-
-            const zip = new JSZip();
             
-            const safeName = currentUserName.replace(/[^a-z0-9]/gi, '_').toUpperCase();
-            const folder = zip.folder(safeName);
-
-            // 1. BUAT FILE TXT
-            const infoContent = `NAMA: ${currentUserName}\nEMAIL: ${currentUserEmail}\nWAKTU: ${new Date().toLocaleString('id-ID')}`;
-            folder.file("data_pengunjung.txt", infoContent);
-
-            // 2. MENTAHAN
-            photos.forEach((photoCanvas, index) => {
-                const dataUrl = photoCanvas.toDataURL('image/png');
-                const dataBase64 = dataUrl.split(',')[1];
-                folder.file(`Mentahan_${index + 1}.png`, dataBase64, {base64: true});
-            });
-
-            // 3. HASIL STRIP
-            const stripUrl = canvas.toDataURL('image/png');
-            const stripBase64 = stripUrl.split(',')[1];
-            folder.file(`Hasil_Strip_${safeName}.png`, stripBase64, {base64: true});
-            
-            // 4. HASIL GIF (16:9)
-            if(currentGifData) {
-                // currentGifData formatnya "data:image/gif;base64,....."
-                const gifBase64 = currentGifData.split(',')[1];
-                folder.file(`Animasi_${safeName}.gif`, gifBase64, {base64: true});
+            if(!currentUserName || !currentUserEmail) {
+                alert("Data nama/email hilang. Silakan refresh.");
+                return;
             }
 
-            // 5. ZIP & DOWNLOAD
-            zip.generateAsync({type:"blob"})
-            .then(function(content) {
-                saveAs(content, `${safeName}_PHOTOBOOTH.zip`);
+            if (GOOGLE_SCRIPT_URL === "MASUKKAN_URL_WEB_APP_SCRIPT_DISINI" || GOOGLE_SCRIPT_URL === "") {
+                alert("ERROR: URL Script belum diisi di kode HTML!");
+                return;
+            }
+
+            btn.innerText = "MENGIRIM EMAIL...";
+            btn.disabled = true;
+            btn.style.backgroundColor = "#ccc";
+
+            // 1. Ambil Data Gambar (Strip)
+            const stripUrl = canvas.toDataURL('image/png');
+            
+            // 2. Siapkan Paket Data
+            const payload = {
+                name: currentUserName,
+                email: currentUserEmail,
+                filename: `Strip_${currentUserName.replace(/[^a-zA-Z0-9]/g, '_')}.png`,
+                image: stripUrl
+            };
+
+            // 3. Kirim ke Google Apps Script
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Mode ini penting agar browser tidak error CORS
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                // Berhasil (diasumsikan)
+                alert(`✅ SUKSES! Link foto telah dikirim ke email: ${currentUserEmail}`);
                 
+                // Download backup lokal jaga-jaga
+                downloadLocalBackup(); 
+
+                // Tanya mau lanjut?
                 setTimeout(() => {
-                    if(confirm(`Sesi ${currentUserName} selesai! Mulai untuk orang berikutnya?`)) {
+                    if(confirm("Sesi Selesai. Lanjut ke orang berikutnya?")) {
                         endSession();
-                    } else {
-                        btn.innerText = "DOWNLOAD ULANG";
-                        btn.disabled = false;
                     }
                 }, 1000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("⚠️ Gagal mengirim email. Pastikan internet terhubung.");
+                btn.innerText = "COBA KIRIM LAGI";
+                btn.disabled = false;
+                btn.style.backgroundColor = "var(--accent-red)";
             });
         }
 
+        // Backup Download Manual (Jika internet mati/email typo)
+        function downloadLocalBackup() {
+             const safeName = currentUserName.replace(/[^a-z0-9]/gi, '_').toUpperCase();
+             const link = document.createElement('a');
+             link.download = `BACKUP_${safeName}.png`;
+             link.href = canvas.toDataURL('image/png');
+             link.click();
+        }
+
+        // --- UI UTILS ---
         function toggleUI(state) {
             const initialControls = document.getElementById('initial-controls');
             const retakeControls = document.getElementById('retake-controls');
@@ -857,7 +875,6 @@
                 cameraWrapper.style.display = 'none';
                 infoPanel.style.display = 'none';
                 
-                // Gunakan Flex agar strip & gif sejajar
                 resultContainer.style.display = 'flex';
             }
         }
