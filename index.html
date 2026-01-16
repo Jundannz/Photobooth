@@ -6,6 +6,7 @@
     <title>Photobooth UE 2026</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -242,7 +243,7 @@
         }
         .btn-retake-all:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px black; }
 
-        /* --- RESULT LAYOUT (UPDATED) --- */
+        /* --- RESULT LAYOUT --- */
         #result-container {
             display: none; 
             width: 100%;
@@ -314,7 +315,7 @@
 
     <div id="session-overlay">
         <div class="session-card">
-            <h1>PHOTOBOOTH UE</h1>
+            <h1>PHOTOBOOTH UE 2026</h1>
             <p>ISI DATA DIRI UNTUK MEMULAI</p>
             
             <input type="text" id="user-name" class="input-session" placeholder="NAMA" autocomplete="off">
@@ -342,7 +343,7 @@
                 <div class="step-list">
                     <div class="step-item"><span class="step-num">1</span> PILIH FRAME DAN TIMER</div>
                     <div class="step-item"><span class="step-num">2</span> KLIK MULAI FOTO</div>
-                    <div class="step-item"><span class="step-num">3</span> SELESAI -> FOTO DIKIRIM KE EMAIL</div>
+                    <div class="step-item"><span class="step-num">3</span> SELESAI & FOTO AKAN DIKIRIM KE EMAIL</div>
                 </div>
                 
                 <div class="marquee-wrapper">
@@ -423,8 +424,8 @@
         // ==========================================
         // KONFIGURASI BACKEND (WAJIB DIISI)
         // ==========================================
-        // Paste URL "Web App" dari Google Apps Script di dalam tanda kutip di bawah ini:
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxJF2im2qg-w1okJTnFlfOzE3nOzfZzpNPjtGmRKzrLrHoZKzyNSQs9ojjBg9hocks/exec"; 
+        // Paste URL "Web App" dari Google Apps Script yang SUDAH DI-UPDATE DAN DI-DEPLOY ULANG di sini:
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrb9F57UhYfpNm6L2_37qEj2zDxksca0fqY3fF8WmQVoDLMwoGfilVLz3h9x2ITziY/exec"; 
         
         // --- CONFIG ---
         const STRIP_W = 920;      
@@ -779,53 +780,59 @@
         }
 
         // ==========================================
-        //  LOGIKA BARU: UPLOAD & EMAIL
+        //  LOGIKA BARU: KIRIM STRIP & GIF KE FOLDER
         // ==========================================
         function finishAndDownloadSession() {
             const btn = document.getElementById('btn-download');
             
+            // Validasi Data User
             if(!currentUserName || !currentUserEmail) {
                 alert("Data nama/email hilang. Silakan refresh.");
                 return;
             }
 
-            if (GOOGLE_SCRIPT_URL === "MASUKKAN_URL_WEB_APP_SCRIPT_DISINI" || GOOGLE_SCRIPT_URL === "") {
+            // Validasi URL Script
+            if (GOOGLE_SCRIPT_URL === "PASTE_URL_WEB_APP_SCRIPT_TERBARU_DISINI" || GOOGLE_SCRIPT_URL === "") {
                 alert("ERROR: URL Script belum diisi di kode HTML!");
                 return;
             }
 
-            btn.innerText = "MENGIRIM EMAIL...";
+            // Validasi GIF
+            if (!currentGifData) {
+                alert("Tunggu sebentar, sedang memproses GIF...");
+                return;
+            }
+
+            btn.innerText = "MENGIRIM PAKET FOTO...";
             btn.disabled = true;
             btn.style.backgroundColor = "#ccc";
 
-            // 1. Ambil Data Gambar (Strip)
+            // 1. Ambil Data Gambar Strip
             const stripUrl = canvas.toDataURL('image/png');
             
             // 2. Siapkan Paket Data
             const payload = {
                 name: currentUserName,
                 email: currentUserEmail,
-                filename: `Strip_${currentUserName.replace(/[^a-zA-Z0-9]/g, '_')}.png`,
-                image: stripUrl
+                image_strip: stripUrl,       // Foto Panjang
+                image_gif: currentGifData    // Animasi Gerak
             };
 
             // 3. Kirim ke Google Apps Script
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Mode ini penting agar browser tidak error CORS
+                mode: 'no-cors',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload)
             })
             .then(response => {
-                // Berhasil (diasumsikan)
-                alert(`✅ SUKSES! Link foto telah dikirim ke email: ${currentUserEmail}`);
+                alert(`✅ SUKSES! Link FOLDER (Strip + GIF) telah dikirim ke email: ${currentUserEmail}`);
                 
-                // Download backup lokal jaga-jaga
+                // Download backup ZIP (Lokal)
                 downloadLocalBackup(); 
 
-                // Tanya mau lanjut?
                 setTimeout(() => {
                     if(confirm("Sesi Selesai. Lanjut ke orang berikutnya?")) {
                         endSession();
@@ -841,13 +848,31 @@
             });
         }
 
-        // Backup Download Manual (Jika internet mati/email typo)
+        // ==========================================
+        //  BACKUP LOKAL (ZIP VERSION)
+        // ==========================================
         function downloadLocalBackup() {
-             const safeName = currentUserName.replace(/[^a-z0-9]/gi, '_').toUpperCase();
-             const link = document.createElement('a');
-             link.download = `BACKUP_${safeName}.png`;
-             link.href = canvas.toDataURL('image/png');
-             link.click();
+            const zip = new JSZip();
+            const safeName = currentUserName.replace(/[^a-z0-9]/gi, '_').toUpperCase();
+            
+            // 1. Masukkan Foto Strip
+            const stripData = canvas.toDataURL('image/png').split(',')[1];
+            zip.file(`STRIP_${safeName}.png`, stripData, {base64: true});
+
+            // 2. Masukkan GIF (Jika Ada)
+            if(currentGifData) {
+                const gifData = currentGifData.split(',')[1];
+                zip.file(`GIF_${safeName}.gif`, gifData, {base64: true});
+            }
+
+            // 3. Generate dan Download ZIP
+            zip.generateAsync({type:"blob"})
+            .then(function(content) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = `BACKUP_${safeName}.zip`;
+                link.click();
+            });
         }
 
         // --- UI UTILS ---
