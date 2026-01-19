@@ -25,6 +25,7 @@
             --accent-green: #4ade80;   
             --accent-red: #fb7185;     
             --accent-yellow: #facc15;  
+            --accent-cyan: #22d3ee;
             
             --border-width: 3px;
             --radius: 12px;
@@ -135,7 +136,11 @@
             background: #000; border: var(--border-width) solid var(--border-color);
         }
 
-        video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: block; }
+        video { 
+            width: 100%; height: 100%; object-fit: cover; 
+            transform: scaleX(-1); display: block; 
+            transition: filter 0.3s ease;
+        }
 
         #flash-overlay {
             position: absolute; inset: 0; background: white; opacity: 0; 
@@ -193,6 +198,7 @@
             padding: 4px 8px; font-size: 0.85rem; margin-bottom: 6px; transform: skew(-5deg);
         }
 
+        /* Style Select & Input */
         select, input[type="file"] {
             width: 100%; padding: 10px; background: #fff;
             border: var(--border-width) solid var(--border-color);
@@ -208,6 +214,62 @@
         }
         .frame-item:hover { border-color: black; transform: scale(1.05); }
         .frame-item.active { border: 3px solid black; box-shadow: 3px 3px 0px 0px var(--accent-yellow); }
+
+        /* --- FILTER ACCORDION STYLE (UPDATED) --- */
+        #filter-container {
+            display: none; 
+            margin-bottom: 15px;
+        }
+
+        /* BUTTON FILTER DIUBAH MENJADI PUTIH AGAR SAMA DENGAN SELECT */
+        .filter-header-btn {
+            width: 100%;
+            background: #ffffff; /* Ubah ke Putih */
+            border: var(--border-width) solid var(--border-color);
+            border-radius: 8px; /* Radius sama dengan select */
+            padding: 10px;
+            font-weight: 700; /* Font weight sama dengan select */
+            font-size: 0.9rem; /* Font size sama dengan select */
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 3px 3px 0px 0px #ccc; /* Shadow sama dengan select */
+            transition: all 0.2s;
+            color: black;
+            font-family: inherit;
+        }
+
+        .filter-header-btn:active { 
+            box-shadow: 0px 0px 0px 0px #ccc; 
+            transform: translate(3px, 3px); 
+        }
+        
+        .arrow-icon { transition: transform 0.3s ease; }
+        .filter-header-btn.open .arrow-icon { transform: rotate(180deg); }
+
+        .filter-content {
+            display: none; 
+            margin-top: 10px;
+            border: 2px solid black;
+            padding: 10px;
+            background: #fff;
+            box-shadow: 3px 3px 0px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        .filter-content.show { display: block; animation: slideDown 0.3s ease; }
+        
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .filter-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .filter-btn {
+            padding: 8px; border: 2px solid black; background: white;
+            font-weight: 700; font-size: 0.8rem; cursor: pointer;
+            transition: 0.2s; text-align: center;
+            border-radius: 4px;
+        }
+        .filter-btn:hover { background: #eee; }
+        .filter-btn.active { background: black; color: white; transform: scale(0.95); }
+
 
         .btn {
             width: 100%; padding: 14px; border: var(--border-width) solid var(--border-color);
@@ -343,7 +405,7 @@
                 <div class="step-list">
                     <div class="step-item"><span class="step-num">1</span> PILIH FRAME DAN TIMER</div>
                     <div class="step-item"><span class="step-num">2</span> KLIK MULAI FOTO</div>
-                    <div class="step-item"><span class="step-num">3</span> SELESAI & FOTO AKAN DIKIRIM KE EMAIL</div>
+                    <div class="step-item"><span class="step-num">3</span> EDIT FILTER DI HASIL AKHIR</div>
                 </div>
                 
                 <div class="marquee-wrapper">
@@ -400,6 +462,26 @@
                 </div>
 
                 <div id="retake-controls" class="retake-menu">
+                    <div id="filter-container">
+                        <span class="label" style="background-color: black; color: white; margin-bottom:5px;">BEAUTY & FILTERS</span>
+                        
+                        <div class="filter-header-btn" onclick="toggleFilterMenu(this)">
+                            <span>PILIH EFEK</span>
+                            <span class="arrow-icon">▼</span>
+                        </div>
+                        
+                        <div class="filter-content" id="filter-menu-content">
+                            <div class="filter-grid">
+                                <div class="filter-btn active" onclick="applyPostFilter('none', this)">NORMAL</div>
+                                <div class="filter-btn" onclick="applyPostFilter('brightness(1.1) saturate(1.1) contrast(1.05) blur(0.3px)', this)">BEAUTY ✨</div>
+                                <div class="filter-btn" onclick="applyPostFilter('sepia(0.3) contrast(1.1)', this)">WARM ☀️</div>
+                                <div class="filter-btn" onclick="applyPostFilter('grayscale(1) contrast(1.2)', this)">B&W 🎬</div>
+                                <div class="filter-btn" onclick="applyPostFilter('saturate(1.5) contrast(1.1)', this)">VIVID 🌈</div>
+                                <div class="filter-btn" onclick="applyPostFilter('contrast(0.9) brightness(1.2) sepia(0.1)', this)">VINTAGE 🎞️</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="retake-label">ULANG FOTO NOMOR BERAPA?</div>
                     
                     <div class="retake-grid">
@@ -424,7 +506,6 @@
         // ==========================================
         // KONFIGURASI BACKEND (WAJIB DIISI)
         // ==========================================
-        // Paste URL "Web App" dari Google Apps Script yang SUDAH DI-UPDATE DAN DI-DEPLOY ULANG di sini:
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrb9F57UhYfpNm6L2_37qEj2zDxksca0fqY3fF8WmQVoDLMwoGfilVLz3h9x2ITziY/exec"; 
         
         // --- CONFIG ---
@@ -462,7 +543,8 @@
 
         // --- STATE VARIABLES ---
         let currentStream = null;
-        let photos = []; 
+        let rawPhotos = []; // Menyimpan canvas "mentah" tanpa filter
+        let photos = [];    // Menyimpan canvas yang sudah difilter untuk display
         let currentFrameImg = null; 
         let currentSessionId = "";
         
@@ -470,6 +552,9 @@
         let currentUserName = "";
         let currentUserEmail = "";
         let currentGifData = null; 
+
+        // Filter State
+        let currentFilterValue = 'none';
 
         // --- PRESETS ---
         const presetFrames = [
@@ -520,6 +605,55 @@
             userNameInput.value = "";
             userEmailInput.value = "";
             location.reload();
+        }
+
+        // --- FILTER LOGIC (UPDATED: POST PROCESSING) ---
+        function toggleFilterMenu(btn) {
+            const content = document.getElementById('filter-menu-content');
+            btn.classList.toggle('open');
+            content.classList.toggle('show');
+        }
+
+        function applyPostFilter(filterString, btnElement) {
+            // 1. Set State Filter
+            currentFilterValue = filterString;
+
+            // 2. Update UI Tombol
+            if(btnElement) {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btnElement.classList.add('active');
+            }
+
+            // 3. Terapkan Filter ke Foto yang sudah ada (Post-Processing)
+            if(rawPhotos.length > 0) {
+                statusText.innerText = "MENERAPKAN FILTER...";
+                
+                // Re-process semua foto dari rawPhotos ke photos
+                photos = rawPhotos.map(raw => {
+                    return processFilterToCanvas(raw, filterString);
+                });
+
+                // Update Tampilan
+                renderResult();
+                generateGif();
+                statusText.innerText = "FILTER DIPERBARUI";
+            }
+        }
+
+        // Fungsi Helper untuk nerapin filter ke canvas
+        function processFilterToCanvas(sourceCanvas, filterStr) {
+            const temp = document.createElement('canvas');
+            temp.width = PHOTO_W; 
+            temp.height = PHOTO_H;
+            const tCtx = temp.getContext('2d');
+            
+            if(filterStr && filterStr !== 'none') {
+                tCtx.filter = filterStr;
+            }
+            
+            tCtx.drawImage(sourceCanvas, 0, 0);
+            tCtx.filter = 'none'; // Reset biar aman
+            return temp;
         }
 
         // --- CAMERA LOGIC ---
@@ -604,7 +738,8 @@
 
         // --- PHOTO SEQUENCE LOGIC ---
         async function startPhotoSequence() {
-            photos = []; 
+            rawPhotos = []; // Reset raw
+            photos = [];    // Reset processed
             toggleUI('capturing');
             infoPanel.style.display = 'none'; 
             
@@ -614,7 +749,13 @@
                 statusText.innerText = `POSE ${i+1} / ${PHOTO_COUNT}`;
                 await doCountdown(timer);
                 triggerFlash(); 
-                photos.push(smartCropCapture());
+                
+                // Capture RAW (tanpa filter)
+                const capturedRaw = captureRawFrame();
+                rawPhotos.push(capturedRaw);
+                
+                // Push ke display array (sementara tanpa filter karena default 'none')
+                photos.push(capturedRaw); 
             }
 
             finishCaptureProcess();
@@ -631,7 +772,12 @@
             await doCountdown(timer);
             triggerFlash();
             
-            photos[index] = smartCropCapture();
+            // Capture Raw baru untuk index tersebut
+            const newRaw = captureRawFrame();
+            rawPhotos[index] = newRaw;
+            
+            // Terapkan filter yang sedang aktif saat ini
+            photos[index] = processFilterToCanvas(newRaw, currentFilterValue);
             
             statusText.innerText = "MEMPROSES ULANG...";
             setTimeout(() => {
@@ -649,11 +795,14 @@
             statusText.innerText = "MEMPROSES FOTO & GIF...";
             
             setTimeout(() => {
+                // Saat pertama kali selesai, pastikan filter applied (biasanya masih 'none')
+                applyPostFilter(currentFilterValue, null);
+
                 renderResult(); // 1. Buat Strip
                 generateGif();  // 2. Buat GIF
                 
                 toggleUI('done');
-                statusText.innerText = "SELESAI!";
+                statusText.innerText = "SELESAI! SILAKAN EDIT FILTER";
             }, 800);
         }
 
@@ -715,7 +864,8 @@
             });
         }
 
-        function smartCropCapture() {
+        // Fungsi Capture Raw (Tanpa Filter CSS)
+        function captureRawFrame() {
             const temp = document.createElement('canvas');
             temp.width = PHOTO_W; temp.height = PHOTO_H;
             const tCtx = temp.getContext('2d');
@@ -738,8 +888,10 @@
             
             tCtx.translate(PHOTO_W, 0); 
             tCtx.scale(-1, 1);
-            
+
+            // RAW: Tidak ada filter di sini
             tCtx.drawImage(video, sx, sy, sW, sH, 0, 0, PHOTO_W, PHOTO_H);
+            
             return temp; 
         }
 
@@ -879,12 +1031,16 @@
         function toggleUI(state) {
             const initialControls = document.getElementById('initial-controls');
             const retakeControls = document.getElementById('retake-controls');
+            const filterContainer = document.getElementById('filter-container'); // Container Filter
             const btnStart = document.getElementById('btn-start');
 
             if(state === 'capturing') {
                 initialControls.style.display = 'block';
                 retakeControls.style.display = 'none';
                 
+                // Hide Filter saat capture
+                filterContainer.style.display = 'none';
+
                 btnStart.disabled = true;
                 btnStart.innerText = "JEPRET...";
                 btnStart.style.backgroundColor = "#ccc";
@@ -897,6 +1053,9 @@
                 initialControls.style.display = 'none';
                 retakeControls.style.display = 'flex'; 
                 
+                // Show Filter saat done (di dalam retake controls)
+                filterContainer.style.display = 'block';
+
                 cameraWrapper.style.display = 'none';
                 infoPanel.style.display = 'none';
                 
@@ -907,10 +1066,12 @@
         function resetAppUI() {
             const initialControls = document.getElementById('initial-controls');
             const retakeControls = document.getElementById('retake-controls');
+            const filterContainer = document.getElementById('filter-container');
             const btnStart = document.getElementById('btn-start');
 
             initialControls.style.display = 'block';
             retakeControls.style.display = 'none';
+            filterContainer.style.display = 'none'; // Pastikan filter hidden saat reset
             
             btnStart.disabled = false;
             btnStart.innerText = "MULAI FOTO";
@@ -921,13 +1082,26 @@
             cameraWrapper.style.display = 'block';
             infoPanel.style.display = 'flex';
             
+            // Reset state filter
+            currentFilterValue = 'none';
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('.filter-btn').classList.add('active'); // Set Normal active
+            
             statusText.innerText = `Halo, ${currentUserName}!`;
+            rawPhotos = [];
             photos = [];
         }
 
         function resetForRetakeAll() {
            resetAppUI();
         }
+
+        //Enter to start session
+        const enterHandler = function (e) {
+            if (e.key === 'Enter') initNewSession();
+        };
+        document.getElementById('user-name').addEventListener('keypress', enterHandler);
+        document.getElementById('user-email').addEventListener('keypress', enterHandler);
     </script>
 </body>
 </html>
