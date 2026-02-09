@@ -13,7 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;800&display=swap" rel="stylesheet">
 
     <style>
-        /* --- 1. NEO-BRUTALISM VARIABLES --- */
+        /*Variavles */
         :root {
             --bg-color: #f4f3ee;       
             --card-bg: #ffffff;        
@@ -49,7 +49,7 @@
             overflow-x: hidden;
         }
 
-        /* --- SESSION OVERLAY --- */
+        /* Session overlay */
         #session-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(244, 243, 238, 0.98);
@@ -87,7 +87,7 @@
         }
         .btn-big-start:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px black; }
 
-        /* --- 2. LAYOUT --- */
+        /* Layout */
         header { 
             text-align: center; margin-bottom: 10px;
             background: var(--accent-yellow); padding: 8px 30px;
@@ -117,7 +117,7 @@
 
         .app-container.visible { visibility: visible; opacity: 1; }
 
-        /* --- 3. COMPONENTS --- */
+        /* Components */
         .brutal-card {
             background: var(--card-bg);
             border: var(--border-width) solid var(--border-color);
@@ -154,7 +154,7 @@
             -webkit-text-stroke: 4px black; z-index: 40;
         }
 
-        /* --- INFO PANEL --- */
+        /* Info panel */
         #placeholder-info {
             margin-top: 20px; border: var(--border-width) solid black;
             background: var(--accent-yellow); padding: 15px;
@@ -180,7 +180,6 @@
             border-radius: 50%; margin-right: 10px; font-size: 0.8rem; flex-shrink: 0;
         }
 
-        /* --- MARQUEE --- */
         .marquee-wrapper {
             margin-top: 15px; padding-top: 10px; overflow: hidden; width: 100%; 
             background: black; color: white; padding: 8px 0; display: flex;
@@ -189,7 +188,7 @@
         .marquee-content span { padding-right: 20px; font-weight: 800; font-size: 1rem; }
         @keyframes scroll-left { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-        /* --- CONTROLS --- */
+        /* Control */
         .controls-wrapper { gap: 15px; background: #fff; height: fit-content; align-items: stretch; }
         .control-group { margin-bottom: 15px; }
         
@@ -198,7 +197,7 @@
             padding: 4px 8px; font-size: 0.85rem; margin-bottom: 6px; transform: skew(-5deg);
         }
 
-        /* Style Select & Input */
+        /* Style select & input */
         select, input[type="file"] {
             width: 100%; padding: 10px; background: #fff;
             border: var(--border-width) solid var(--border-color);
@@ -215,25 +214,24 @@
         .frame-item:hover { border-color: black; transform: scale(1.05); }
         .frame-item.active { border: 3px solid black; box-shadow: 3px 3px 0px 0px var(--accent-yellow); }
 
-        /* --- FILTER ACCORDION STYLE (UPDATED) --- */
+        /* Filter */
         #filter-container {
             display: none; 
             margin-bottom: 15px;
         }
 
-        /* BUTTON FILTER DIUBAH MENJADI PUTIH AGAR SAMA DENGAN SELECT */
         .filter-header-btn {
             width: 100%;
-            background: #ffffff; /* Ubah ke Putih */
+            background: #ffffff;
             border: var(--border-width) solid var(--border-color);
-            border-radius: 8px; /* Radius sama dengan select */
+            border-radius: 8px;
             padding: 10px;
-            font-weight: 700; /* Font weight sama dengan select */
-            font-size: 0.9rem; /* Font size sama dengan select */
+            font-weight: 700;
+            font-size: 0.9rem;
             text-transform: uppercase;
             cursor: pointer;
             display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 3px 3px 0px 0px #ccc; /* Shadow sama dengan select */
+            box-shadow: 3px 3px 0px 0px #ccc;
             transition: all 0.2s;
             color: black;
             font-family: inherit;
@@ -305,7 +303,7 @@
         }
         .btn-retake-all:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px black; }
 
-        /* --- RESULT LAYOUT --- */
+        /* Result layout */
         #result-container {
             display: none; 
             width: 100%;
@@ -322,7 +320,7 @@
             flex: 1 1 300px;
         }
         
-        /* SEKAT / DIVIDER */
+        /* Divider */
         .result-divider {
             width: 4px;
             height: 350px; 
@@ -503,12 +501,10 @@
     <canvas id="canvas"></canvas>
 
     <script>
-        // ==========================================
-        // KONFIGURASI BACKEND (WAJIB DIISI)
-        // ==========================================
+        // Backend Google Script URL
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrb9F57UhYfpNm6L2_37qEj2zDxksca0fqY3fF8WmQVoDLMwoGfilVLz3h9x2ITziY/exec"; 
         
-        // --- CONFIG ---
+        // Config
         const STRIP_W = 920;      
         const STRIP_H = 1200;     
         const HALF_STRIP_W = 460; 
@@ -516,7 +512,7 @@
         const PHOTO_W = 400; 
         const PHOTO_H = 320; 
 
-        // --- DOM ELEMENTS ---
+        // DOM Elements
         const video = document.getElementById('video');
         const cameraSelect = document.getElementById('camera-source');
         const canvas = document.getElementById('canvas');
@@ -543,8 +539,8 @@
 
         // --- STATE VARIABLES ---
         let currentStream = null;
-        let rawPhotos = []; // Menyimpan canvas "mentah" tanpa filter
-        let photos = [];    // Menyimpan canvas yang sudah difilter untuk display
+        let rawPhotos = [];
+        let photos = [];
         let currentFrameImg = null; 
         let currentSessionId = "";
         
@@ -556,7 +552,7 @@
         // Filter State
         let currentFilterValue = 'none';
 
-        // --- PRESETS ---
+        // Preset frame
         const presetFrames = [
             { name: "F1", src: "assets/frame1.png" },
             { name: "F2", src: "assets/frame2.png" },
@@ -565,7 +561,7 @@
             { name: "F5", src: "assets/frame5.png" }
         ];
 
-        // --- SESSION LOGIC ---
+        // Session Initialization
         function initNewSession() {
             const nameVal = userNameInput.value.trim();
             const emailVal = userEmailInput.value.trim();
@@ -607,7 +603,7 @@
             location.reload();
         }
 
-        // --- FILTER LOGIC (UPDATED: POST PROCESSING) ---
+        // Filter Menu Logic
         function toggleFilterMenu(btn) {
             const content = document.getElementById('filter-menu-content');
             btn.classList.toggle('open');
@@ -615,32 +611,30 @@
         }
 
         function applyPostFilter(filterString, btnElement) {
-            // 1. Set State Filter
+            // Set State Filter
             currentFilterValue = filterString;
 
-            // 2. Update UI Tombol
+            // Update UI Button
             if(btnElement) {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                 btnElement.classList.add('active');
             }
 
-            // 3. Terapkan Filter ke Foto yang sudah ada (Post-Processing)
+            // Post processing
             if(rawPhotos.length > 0) {
                 statusText.innerText = "MENERAPKAN FILTER...";
                 
-                // Re-process semua foto dari rawPhotos ke photos
+                // Re-process foto
                 photos = rawPhotos.map(raw => {
                     return processFilterToCanvas(raw, filterString);
                 });
 
-                // Update Tampilan
                 renderResult();
                 generateGif();
                 statusText.innerText = "FILTER DIPERBARUI";
             }
         }
 
-        // Fungsi Helper untuk nerapin filter ke canvas
         function processFilterToCanvas(sourceCanvas, filterStr) {
             const temp = document.createElement('canvas');
             temp.width = PHOTO_W; 
@@ -652,11 +646,11 @@
             }
             
             tCtx.drawImage(sourceCanvas, 0, 0);
-            tCtx.filter = 'none'; // Reset biar aman
+            tCtx.filter = 'none';
             return temp;
         }
 
-        // --- CAMERA LOGIC ---
+        // Camera Logic
         async function getCameras() {
             try {
                 await navigator.mediaDevices.getUserMedia({ video: true });
@@ -736,7 +730,7 @@
             }
         });
 
-        // --- PHOTO SEQUENCE LOGIC ---
+        // Photo Capture Logic
         async function startPhotoSequence() {
             rawPhotos = []; // Reset raw
             photos = [];    // Reset processed
@@ -750,11 +744,11 @@
                 await doCountdown(timer);
                 triggerFlash(); 
                 
-                // Capture RAW (tanpa filter)
+                // Capture RAW
                 const capturedRaw = captureRawFrame();
                 rawPhotos.push(capturedRaw);
                 
-                // Push ke display array (sementara tanpa filter karena default 'none')
+                // Push display photo
                 photos.push(capturedRaw); 
             }
 
@@ -772,11 +766,11 @@
             await doCountdown(timer);
             triggerFlash();
             
-            // Capture Raw baru untuk index tersebut
+            // Capture Raw
             const newRaw = captureRawFrame();
             rawPhotos[index] = newRaw;
             
-            // Terapkan filter yang sedang aktif saat ini
+            // Apply current filter
             photos[index] = processFilterToCanvas(newRaw, currentFilterValue);
             
             statusText.innerText = "MEMPROSES ULANG...";
@@ -795,18 +789,17 @@
             statusText.innerText = "MEMPROSES FOTO & GIF...";
             
             setTimeout(() => {
-                // Saat pertama kali selesai, pastikan filter applied (biasanya masih 'none')
                 applyPostFilter(currentFilterValue, null);
 
-                renderResult(); // 1. Buat Strip
-                generateGif();  // 2. Buat GIF
+                renderResult();
+                generateGif();
                 
                 toggleUI('done');
                 statusText.innerText = "SELESAI! SILAKAN EDIT FILTER";
             }, 800);
         }
 
-        // --- GIF GENERATOR ---
+        // GIF Generation Logic
         function generateGif() {
             const GIF_W = 400;
             const GIF_H = 225;
@@ -841,7 +834,7 @@
             });
         }
 
-        // --- UTILS ---
+        // Utility Functions
         function triggerFlash() {
             flashOverlay.style.opacity = 1;
             setTimeout(() => { flashOverlay.style.opacity = 0; }, 200);
@@ -864,7 +857,6 @@
             });
         }
 
-        // Fungsi Capture Raw (Tanpa Filter CSS)
         function captureRawFrame() {
             const temp = document.createElement('canvas');
             temp.width = PHOTO_W; temp.height = PHOTO_H;
@@ -889,7 +881,6 @@
             tCtx.translate(PHOTO_W, 0); 
             tCtx.scale(-1, 1);
 
-            // RAW: Tidak ada filter di sini
             tCtx.drawImage(video, sx, sy, sW, sH, 0, 0, PHOTO_W, PHOTO_H);
             
             return temp; 
@@ -910,13 +901,11 @@
             let currentY = gap; 
 
             photos.forEach(photo => {
-                // Kiri
                 const leftX = marginX;
                 ctx.drawImage(photo, leftX, currentY);
                 ctx.lineWidth = 2; ctx.strokeStyle = "black";
                 ctx.strokeRect(leftX, currentY, PHOTO_W, PHOTO_H);
 
-                // Kanan
                 const rightX = marginX + HALF_STRIP_W;
                 ctx.drawImage(photo, rightX, currentY);
                 ctx.strokeRect(rightX, currentY, PHOTO_W, PHOTO_H);
@@ -931,9 +920,7 @@
             resultPreview.src = canvas.toDataURL('image/png');
         }
 
-        // ==========================================
-        //  LOGIKA BARU: KIRIM STRIP & GIF KE FOLDER
-        // ==========================================
+        //Send Data to Google Script
         function finishAndDownloadSession() {
             const btn = document.getElementById('btn-download');
             
@@ -959,18 +946,18 @@
             btn.disabled = true;
             btn.style.backgroundColor = "#ccc";
 
-            // 1. Ambil Data Gambar Strip
+            // Ambil Data Gambar Strip
             const stripUrl = canvas.toDataURL('image/png');
             
-            // 2. Siapkan Paket Data
+            // Siapkan Paket Data
             const payload = {
                 name: currentUserName,
                 email: currentUserEmail,
-                image_strip: stripUrl,       // Foto Panjang
-                image_gif: currentGifData    // Animasi Gerak
+                image_strip: stripUrl, 
+                image_gif: currentGifData 
             };
 
-            // 3. Kirim ke Google Apps Script
+            // Kirim ke Google Apps Script
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -980,7 +967,7 @@
                 body: JSON.stringify(payload)
             })
             .then(response => {
-                alert(`✅ SUKSES! Link FOLDER (Strip + GIF) telah dikirim ke email: ${currentUserEmail}`);
+                alert(`SUKSES! Link FOLDER (Strip + GIF) telah dikirim ke email: ${currentUserEmail}`);
                 
                 // Download backup ZIP (Lokal)
                 downloadLocalBackup(); 
@@ -993,31 +980,29 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert("⚠️ Gagal mengirim email. Pastikan internet terhubung.");
+                alert("Gagal mengirim email. Pastikan internet terhubung.");
                 btn.innerText = "COBA KIRIM LAGI";
                 btn.disabled = false;
                 btn.style.backgroundColor = "var(--accent-red)";
             });
         }
 
-        // ==========================================
-        //  BACKUP LOKAL (ZIP VERSION)
-        // ==========================================
+        // Download Local Backup ZIP
         function downloadLocalBackup() {
             const zip = new JSZip();
             const safeName = currentUserName.replace(/[^a-z0-9]/gi, '_').toUpperCase();
             
-            // 1. Masukkan Foto Strip
+            // Masukkan Foto Strip
             const stripData = canvas.toDataURL('image/png').split(',')[1];
             zip.file(`STRIP_${safeName}.png`, stripData, {base64: true});
 
-            // 2. Masukkan GIF (Jika Ada)
+            // Masukkan GIF (Jika Ada)
             if(currentGifData) {
                 const gifData = currentGifData.split(',')[1];
                 zip.file(`GIF_${safeName}.gif`, gifData, {base64: true});
             }
 
-            // 3. Generate dan Download ZIP
+            // Generate dan Download ZIP
             zip.generateAsync({type:"blob"})
             .then(function(content) {
                 const link = document.createElement('a');
@@ -1027,7 +1012,7 @@
             });
         }
 
-        // --- UI UTILS ---
+        // UI Utility Functions
         function toggleUI(state) {
             const initialControls = document.getElementById('initial-controls');
             const retakeControls = document.getElementById('retake-controls');
@@ -1038,7 +1023,6 @@
                 initialControls.style.display = 'block';
                 retakeControls.style.display = 'none';
                 
-                // Hide Filter saat capture
                 filterContainer.style.display = 'none';
 
                 btnStart.disabled = true;
@@ -1053,7 +1037,6 @@
                 initialControls.style.display = 'none';
                 retakeControls.style.display = 'flex'; 
                 
-                // Show Filter saat done (di dalam retake controls)
                 filterContainer.style.display = 'block';
 
                 cameraWrapper.style.display = 'none';
@@ -1071,7 +1054,7 @@
 
             initialControls.style.display = 'block';
             retakeControls.style.display = 'none';
-            filterContainer.style.display = 'none'; // Pastikan filter hidden saat reset
+            filterContainer.style.display = 'none';
             
             btnStart.disabled = false;
             btnStart.innerText = "MULAI FOTO";
@@ -1082,10 +1065,9 @@
             cameraWrapper.style.display = 'block';
             infoPanel.style.display = 'flex';
             
-            // Reset state filter
             currentFilterValue = 'none';
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector('.filter-btn').classList.add('active'); // Set Normal active
+            document.querySelector('.filter-btn').classList.add('active');
             
             statusText.innerText = `Halo, ${currentUserName}!`;
             rawPhotos = [];
